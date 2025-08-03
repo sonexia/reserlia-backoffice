@@ -1,10 +1,15 @@
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { useEffect, useState } from "react";
+import { ThemeProvider } from '@mui/material/styles';
+import { CssBaseline, AppBar, Toolbar, Box, Button, Container } from '@mui/material';
 import ReservationFormModal from "./components/ReservationFormModal";
-import ReservationList from "./components/ReservationList";
+import ReservationTable from "./components/ReservationTable";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
 import { toast } from 'react-toastify';
+import logoReserlia from './assets/logo-reserlia.png';
+import { reserliaTheme } from './theme/reserliaTheme';
+import './App.css';
 
 const client = generateClient<Schema>();
 
@@ -23,7 +28,16 @@ function App() {
   async function handleSave(input: Partial<Schema["Reservation"]["type"]>) {
     try {
       if (editingReservation) {
-        await client.models.Reservation.update({ ...editingReservation, ...input });
+        // Solo enviamos los campos que se pueden actualizar, no metadatos del sistema
+        const updateData = {
+          id: editingReservation.id,
+          datetime: input.datetime,
+          customerName: input.customerName,
+          partySize: input.partySize,
+          tableNumber: input.tableNumber,
+          notes: input.notes,
+        };
+        await client.models.Reservation.update(updateData);
         toast.success('Reserva actualizada correctamente');
       } else {
         await client.models.Reservation.create(input as Omit<Schema["Reservation"]["type"], "id">);
@@ -56,31 +70,86 @@ function App() {
   }
 
   return (
-    <div className="app">
-      <header>
-        <h1>Reserlia - Gestión de Reservas</h1>
-      </header>
-      
-      <button onClick={() => setModalOpen(true)}>+ Nueva reserva</button>
-      <ReservationList
-        reservations={reservations}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+    <ThemeProvider theme={reserliaTheme}>
+      <CssBaseline />
+      <Box sx={{ 
+        flexGrow: 1, 
+        minHeight: '100vh', 
+        bgcolor: 'white'
+      }}>
+        {/* Header con logo de Reserlia */}
+        <AppBar position="static" elevation={0} sx={{ bgcolor: 'white', borderBottom: '1px solid #e5e7eb' }}>
+          <Toolbar sx={{ justifyContent: 'space-between' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <img 
+                src={logoReserlia} 
+                alt="Reserlia" 
+                style={{ height: 40, width: 'auto' }}
+              />
+              <Box>
+                <Box sx={{ fontSize: '1.25rem', fontWeight: 600, color: 'text.primary' }}>
+                  Reserlia
+                </Box>
+                <Box sx={{ fontSize: '0.875rem', color: 'text.secondary' }}>
+                  Gestión de Reservas
+                </Box>
+              </Box>
+            </Box>
+            <Button 
+              variant="outlined" 
+              onClick={() => signOut()}
+              sx={{ 
+                color: 'text.primary', 
+                borderColor: '#e5e7eb',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  bgcolor: 'rgba(0, 201, 167, 0.1)'
+                }
+              }}
+            >
+              Cerrar sesión
+            </Button>
+          </Toolbar>
+        </AppBar>
 
-      <ReservationFormModal
-        open={modalOpen}
-        onClose={() => {
-          setModalOpen(false);
-          setEditingReservation(null);
-        }}
-        reservation={editingReservation}
-        onSave={handleSave}
-      />
+        {/* Contenido principal */}
+        <Container maxWidth="xl" sx={{ py: 4 }}>
+          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Box>
+              <Box sx={{ fontSize: '1.5rem', fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
+                Reservas
+              </Box>
+              <Box sx={{ color: 'text.secondary' }}>
+                Gestiona todas las reservas de tu restaurante
+              </Box>
+            </Box>
+            <Button 
+              variant="contained" 
+              onClick={() => setModalOpen(true)}
+              sx={{ borderRadius: 2, px: 3 }}
+            >
+              + Nueva reserva
+            </Button>
+          </Box>
 
-    <button onClick={() => signOut()}>Cerrar sesión</button>
-    </div>
-    
+          <ReservationTable
+            reservations={reservations}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+          />
+        </Container>
+
+        <ReservationFormModal
+          open={modalOpen}
+          onClose={() => {
+            setModalOpen(false);
+            setEditingReservation(null);
+          }}
+          reservation={editingReservation}
+          onSave={handleSave}
+        />
+      </Box>
+    </ThemeProvider>
   );
 }
 
