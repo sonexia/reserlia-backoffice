@@ -1,7 +1,20 @@
-import { useState, FormEvent, useEffect, useRef } from "react"; // useRef para controlar apertura
+import { useState, FormEvent, useEffect } from "react";
+import { 
+  Dialog, 
+  DialogTitle, 
+  DialogContent, 
+  DialogActions, 
+  TextField, 
+  Button, 
+  Box, 
+  Alert 
+} from '@mui/material';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs, { Dayjs } from 'dayjs';
+import 'dayjs/locale/es';
 import type { Schema } from "../../amplify/data/resource";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
 
 export interface ReservationFormModalProps {
   open: boolean;
@@ -10,14 +23,17 @@ export interface ReservationFormModalProps {
   reservation?: Schema["Reservation"]["type"] | null;
 }
 
+// Configurar dayjs en español
+dayjs.locale('es');
+
 export default function ReservationFormModal({
   open,
   onClose,
   onSave,
   reservation,
 }: ReservationFormModalProps) {
-  const [selectedDate, setSelectedDate] = useState<Date | null>(
-    reservation?.datetime ? new Date(reservation.datetime) : new Date()
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(
+    reservation?.datetime ? dayjs(reservation.datetime) : dayjs()
   );
 
   const [customerName, setCustomerName] = useState(reservation?.customerName || "");
@@ -27,21 +43,18 @@ export default function ReservationFormModal({
   const [tableNumber, setTableNumber] = useState(reservation?.tableNumber || "");
   const [notes, setNotes] = useState(reservation?.notes || "");
   const [error, setError] = useState<string | null>(null);
-  // Referencia para cerrar el DatePicker manualmente
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const datePickerRef = useRef<any>(null);
 
 
   // Initialize form when reservation changes
   useEffect(() => {
     if (reservation) {
-      setSelectedDate(new Date(reservation.datetime));
+      setSelectedDate(dayjs(reservation.datetime));
       setCustomerName(reservation.customerName ?? "");
       setPartySize(reservation.partySize ?? 1);
       setTableNumber(reservation.tableNumber ?? "");
       setNotes(reservation.notes ?? "");
     } else {
-      setSelectedDate(new Date());
+      setSelectedDate(dayjs());
       setCustomerName("");
       setPartySize(1);
       setTableNumber("");
@@ -71,123 +84,212 @@ export default function ReservationFormModal({
   }
 
   return (
-    <div className="modal-overlay">
-      <div className="modal">
-        <h2>{reservation ? "Editar reserva" : "Nueva reserva"}</h2>
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        <form onSubmit={handleSubmit}>
-          <div style={{ width: '100%', marginBottom: '20px' }}>
-            <label htmlFor="reserva-datetime">Fecha y hora*</label>
-            <DatePicker
-              id="reserva-datetime"
-              ref={datePickerRef}
-              selected={selectedDate}
-              onChange={(newDate: Date | null) => {
-                if (!newDate) return;
-                // Si ya teníamos una fecha del mismo día y la hora cambió, cerramos
-                if (
-                  selectedDate &&
-                  selectedDate.getFullYear() === newDate.getFullYear() &&
-                  selectedDate.getMonth() === newDate.getMonth() &&
-                  selectedDate.getDate() === newDate.getDate() &&
-                  (selectedDate.getHours() !== newDate.getHours() || selectedDate.getMinutes() !== newDate.getMinutes())
-                ) {
-                  datePickerRef.current?.setOpen(false);
-                }
-                setSelectedDate(newDate);
-              }}
-              shouldCloseOnSelect={false}
-              showTimeSelect
-              dateFormat="dd/MM/yyyy HH:mm"
-              timeFormat="HH:mm"
-              timeCaption="Hora"
-              timeIntervals={15}
-              required
-              customInput={
-                <input id="reserva-datetime" 
-                  style={{ 
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid #ccc'
-                  }} 
-                />
-              }
-            />
-          </div>
-          <label>
-            Nombre del cliente*
-            <input
-              type="text"
+    <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="es">
+      <Dialog 
+        open={open} 
+        onClose={onClose} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          fontSize: '1.5rem', 
+          fontWeight: 600, 
+          color: 'text.primary',
+          pb: 1
+        }}>
+          {reservation ? "Editar reserva" : "Nueva reserva"}
+        </DialogTitle>
+        
+        <DialogContent>
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+          
+          <Box component="form" onSubmit={handleSubmit} sx={{ pt: 1 }}>
+            <Box sx={{ mb: 3 }}>
+              <DateTimePicker
+                label="Fecha y hora *"
+                value={selectedDate}
+                onChange={(newValue) => setSelectedDate(newValue)}
+                format="DD/MM/YYYY HH:mm"
+                ampm={false}
+                minutesStep={15}
+                shouldDisableTime={(value, view) => {
+                  if (view === 'minutes') {
+                    const minutes = value.minute();
+                    return ![0, 15, 30, 45].includes(minutes);
+                  }
+                  return false;
+                }}
+                views={['year', 'month', 'day', 'hours', 'minutes']}
+                closeOnSelect={true}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    required: true,
+                    variant: "outlined",
+                    sx: {
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: 2,
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'primary.main',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'primary.main',
+                        }
+                      }
+                    }
+                  },
+                  actionBar: {
+                    actions: ['accept', 'cancel', 'clear']
+                  },
+                  layout: {
+                    sx: {
+                      '& .MuiPickersLayout-actionBar': {
+                        '& .MuiButton-root': {
+                          borderRadius: 2
+                        }
+                      }
+                    }
+                  },
+                  digitalClockSectionItem: {
+                    sx: {
+                      backgroundColor: 'white !important',
+                      color: 'text.primary !important',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 201, 167, 0.1) !important',
+                        color: 'rgb(0, 161, 134) !important',
+                        fontWeight: 500
+                      },
+                      '&.Mui-selected, &[aria-selected="true"]': {
+                        backgroundColor: 'rgb(0, 201, 167) !important',
+                        color: 'white !important',
+                        fontWeight: 600,
+                        '&:hover': {
+                          backgroundColor: 'rgb(0, 161, 134) !important',
+                          color: 'white !important'
+                        }
+                      }
+                    }
+                  },
+                  popper: {
+                    sx: {
+                      '& .MuiPaper-root': {
+                        backgroundColor: 'white',
+                        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                        border: '1px solid #e5e7eb',
+                        '& .MuiMultiSectionDigitalClock-root': {
+                          backgroundColor: 'white !important',
+                          '& .MuiList-root': {
+                            backgroundColor: 'white !important',
+                            '& .MuiMenuItem-root': {
+                              backgroundColor: 'white !important',
+                              color: 'rgb(31, 41, 55) !important',
+                              '&:hover': {
+                                backgroundColor: 'rgba(0, 201, 167, 0.1) !important',
+                                color: 'rgb(0, 161, 134) !important'
+                              },
+                              '&.Mui-selected, &[aria-selected="true"]': {
+                                backgroundColor: 'rgb(0, 201, 167) !important',
+                                color: 'white !important',
+                                '&:hover': {
+                                  backgroundColor: 'rgb(0, 161, 134) !important',
+                                  color: 'white !important'
+                                }
+                              },
+                              // Ocultar minutos no disponibles (elementos deshabilitados)
+                              '&.Mui-disabled': {
+                                display: 'none !important'
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }}
+              />
+            </Box>
+            
+            <TextField
+              fullWidth
+              label="Nombre del cliente"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               required
+              variant="outlined"
+              sx={{ mb: 3 }}
             />
-          </label>
-          <label>
-            Número de personas*
-            <input
+            
+            <TextField
+              fullWidth
+              label="Número de personas"
               type="number"
-              min={1}
               value={partySize}
-              onChange={(e) => setPartySize(parseInt(e.target.value))}
+              onChange={(e) => setPartySize(parseInt(e.target.value) || 1)}
               required
+              variant="outlined"
+              inputProps={{ min: 1 }}
+              sx={{ mb: 3 }}
             />
-          </label>
-          <label>
-            Mesa asignada
-            <input
-              type="text"
+            
+            <TextField
+              fullWidth
+              label="Mesa asignada"
               value={tableNumber}
               onChange={(e) => setTableNumber(e.target.value)}
+              variant="outlined"
+              sx={{ mb: 3 }}
             />
-          </label>
-          <label>
-            Observaciones
-            <textarea value={notes} onChange={(e) => setNotes(e.target.value)} />
-          </label>
-          <div className="modal-actions">
-            <button type="submit">Guardar</button>
-            <button type="button" onClick={onClose}>
-              Cancelar
-            </button>
-          </div>
-        </form>
-      </div>
-      <style>{`
-        .modal-overlay {
-          position: fixed;
-          inset: 0;
-          background: rgba(0, 0, 0, 0.4);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-        .modal {
-          background: #fff;
-          padding: 1.5rem;
-          border-radius: 8px;
-          width: 90%;
-          max-width: 500px;
-        }
-        .modal label {
-          display: block;
-          margin-bottom: 0.5rem;
-        }
-        .modal input,
-        .modal textarea {
-          width: 100%;
-          padding: 0.4rem;
-          margin-top: 0.25rem;
-          margin-bottom: 1rem;
-        }
-        .modal-actions {
-          display: flex;
-          gap: 0.5rem;
-          justify-content: flex-end;
-        }
-      `}</style>
-    </div>
+            
+            <TextField
+              fullWidth
+              label="Observaciones"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              variant="outlined"
+              multiline
+              rows={3}
+              sx={{ mb: 2 }}
+            />
+          </Box>
+        </DialogContent>
+        
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button 
+            onClick={onClose} 
+            variant="outlined"
+            sx={{ 
+              borderRadius: 2,
+              px: 3
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleSubmit} 
+            variant="contained"
+            sx={{ 
+              borderRadius: 2,
+              px: 3,
+              bgcolor: 'primary.main',
+              '&:hover': {
+                bgcolor: 'primary.dark'
+              }
+            }}
+          >
+            Guardar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </LocalizationProvider>
   );
 }
