@@ -15,7 +15,7 @@ const schema = a.schema({
       tableNumber: a.string(), // Mesa asignada (opcional por defecto)
       notes: a.string(),   // Observaciones adicionales (opcional por defecto)
     })
-    .authorization((allow) => [allow.authenticated()]),
+    .authorization((allow) => [allow.owner()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
