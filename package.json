@@ -17,12 +17,14 @@
     "@mui/material": "^7.2.0",
     "@mui/x-date-pickers": "^8.9.2",
     "@types/react-datepicker": "^7.0.0",
+    "@types/react-router-dom": "^5.3.3",
     "aws-amplify": "^6.6.6",
     "dayjs": "^1.11.13",
     "material-react-table": "^3.2.1",
     "react": "^18.2.0",
     "react-datepicker": "^8.4.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^7.7.1",
     "react-toastify": "^11.0.5"
   },
   "devDependencies": {
