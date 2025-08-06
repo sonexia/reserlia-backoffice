@@ -420,7 +420,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={editing ? editConfig.requiresDeposit : Boolean(config?.requiresDeposit)}
+                      checked={editing ? Boolean(editConfig.requiresDeposit) : Boolean(config?.requiresDeposit)}
                       onChange={(e) => setEditConfig(prev => ({ ...prev, requiresDeposit: e.target.checked }))}
                       disabled={!editing}
                     />
@@ -429,7 +429,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   sx={{ mb: 2 }}
                 />
                 
-                {(editing ? editConfig.requiresDeposit : Boolean(config?.requiresDeposit)) && (
+                {(editing ? Boolean(editConfig.requiresDeposit) : Boolean(config?.requiresDeposit)) && (
                   <Box sx={{ ml: 2 }}>
                     <FormControl component="fieldset" sx={{ mb: 2 }}>
                       <FormLabel component="legend">Tipo de paga y señal:</FormLabel>
@@ -475,7 +475,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={editing ? editConfig.askReservationReason : Boolean(config?.askReservationReason)}
+                        checked={editing ? Boolean(editConfig.askReservationReason) : Boolean(config?.askReservationReason)}
                         onChange={(e) => setEditConfig(prev => ({ ...prev, askReservationReason: e.target.checked }))}
                         disabled={!editing}
                       />
@@ -486,7 +486,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={editing ? editConfig.askAllergies : Boolean(config?.askAllergies)}
+                        checked={editing ? Boolean(editConfig.askAllergies) : Boolean(config?.askAllergies)}
                         onChange={(e) => setEditConfig(prev => ({ ...prev, askAllergies: e.target.checked }))}
                         disabled={!editing}
                       />
@@ -497,7 +497,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={editing ? editConfig.askFoodType : Boolean(config?.askFoodType)}
+                        checked={editing ? Boolean(editConfig.askFoodType) : Boolean(config?.askFoodType)}
                         onChange={(e) => setEditConfig(prev => ({ ...prev, askFoodType: e.target.checked }))}
                         disabled={!editing}
                       />
