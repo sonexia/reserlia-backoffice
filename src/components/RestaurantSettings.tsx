@@ -1,0 +1,449 @@
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Divider,
+  Alert,
+  CircularProgress,
+  Card,
+  CardContent,
+  IconButton,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
+} from '@mui/material';
+import {
+  Restaurant,
+  TableBar,
+  Edit,
+  Save,
+  Cancel,
+  Settings
+} from '@mui/icons-material';
+
+interface RestaurantConfig {
+  id?: string;
+  salonTables: number;
+  salonCapacity: number;
+  highTables?: number;
+  highTablesCapacity?: number;
+  terraceTables?: number;
+  terraceCapacity?: number;
+  barSeats?: number;
+}
+
+interface RestaurantSettingsProps {
+  config: RestaurantConfig | null;
+  onUpdate: (config: Omit<RestaurantConfig, 'id'>) => void;
+  loading?: boolean;
+  open?: boolean;
+  onClose?: () => void;
+}
+
+const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
+  config,
+  onUpdate,
+  loading = false,
+  open = false,
+  onClose
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [editConfig, setEditConfig] = useState<RestaurantConfig>({
+    salonTables: 0,
+    salonCapacity: 0,
+    highTables: 0,
+    highTablesCapacity: 0,
+    terraceTables: 0,
+    terraceCapacity: 0,
+    barSeats: 0,
+  });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (config) {
+      setEditConfig({
+        ...config,
+        highTables: config.highTables || 0,
+        highTablesCapacity: config.highTablesCapacity || 0,
+        terraceTables: config.terraceTables || 0,
+        terraceCapacity: config.terraceCapacity || 0,
+        barSeats: config.barSeats || 0,
+      });
+    }
+  }, [config]);
+
+  const validate = (): boolean => {
+    const newErrors: Record<string, string> = {};
+
+    if (!editConfig.salonTables || editConfig.salonTables <= 0) {
+      newErrors.salonTables = 'Debe tener al menos 1 mesa en el salón';
+    }
+    if (!editConfig.salonCapacity || editConfig.salonCapacity <= 0) {
+      newErrors.salonCapacity = 'La capacidad del salón debe ser mayor a 0';
+    }
+    if (editConfig.salonCapacity && editConfig.salonTables && editConfig.salonCapacity < editConfig.salonTables) {
+      newErrors.salonCapacity = 'La capacidad no puede ser menor al número de mesas';
+    }
+
+    if (editConfig.highTables && editConfig.highTables > 0) {
+      if (!editConfig.highTablesCapacity || editConfig.highTablesCapacity <= 0) {
+        newErrors.highTablesCapacity = 'Debe especificar la capacidad de las mesas altas';
+      }
+      if (editConfig.highTablesCapacity && editConfig.highTablesCapacity < editConfig.highTables) {
+        newErrors.highTablesCapacity = 'La capacidad no puede ser menor al número de mesas altas';
+      }
+    }
+
+    if (editConfig.terraceTables && editConfig.terraceTables > 0) {
+      if (!editConfig.terraceCapacity || editConfig.terraceCapacity <= 0) {
+        newErrors.terraceCapacity = 'Debe especificar la capacidad de la terraza';
+      }
+      if (editConfig.terraceCapacity && editConfig.terraceCapacity < editConfig.terraceTables) {
+        newErrors.terraceCapacity = 'La capacidad no puede ser menor al número de mesas de terraza';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = () => {
+    if (validate()) {
+      onUpdate(editConfig);
+      setEditing(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (config) {
+      setEditConfig({
+        ...config,
+        highTables: config.highTables || 0,
+        highTablesCapacity: config.highTablesCapacity || 0,
+        terraceTables: config.terraceTables || 0,
+        terraceCapacity: config.terraceCapacity || 0,
+        barSeats: config.barSeats || 0,
+      });
+    }
+    setEditing(false);
+    setErrors({});
+  };
+
+  const updateConfig = (field: keyof RestaurantConfig, value: number) => {
+    setEditConfig(prev => ({
+      ...prev,
+      [field]: value || 0
+    }));
+    // Limpiar errores del campo cuando se modifica
+    if (errors[field]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const getTotalCapacity = () => {
+    if (!config) return 0;
+    return (config.salonCapacity || 0) + 
+           (config.highTablesCapacity || 0) + 
+           (config.terraceCapacity || 0) + 
+           (config.barSeats || 0);
+  };
+
+  const getTotalTables = () => {
+    if (!config) return 0;
+    return (config.salonTables || 0) + 
+           (config.highTables || 0) + 
+           (config.terraceTables || 0);
+  };
+
+  const content = (
+    <Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Settings color="primary" />
+          <Typography variant="h5" fontWeight="600">
+            Configuración del Restaurante
+          </Typography>
+        </Box>
+        {!editing && (
+          <IconButton
+            onClick={() => setEditing(true)}
+            color="primary"
+            sx={{ bgcolor: 'primary.light', '&:hover': { bgcolor: 'primary.main' } }}
+          >
+            <Edit />
+          </IconButton>
+        )}
+      </Box>
+
+      {!config && !loading && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          No se encontró configuración del restaurante. Esto debería haberse configurado durante el primer inicio de sesión.
+        </Alert>
+      )}
+
+      {loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+          <CircularProgress />
+        </Box>
+      )}
+
+      {config && (
+        <>
+          {/* Resumen */}
+          <Box sx={{ display: 'flex', gap: 2, mb: 4, flexWrap: 'wrap' }}>
+            <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Restaurant sx={{ fontSize: 32, color: 'primary.main', mb: 1 }} />
+                  <Typography variant="h4" fontWeight="600">
+                    {getTotalTables()}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Total de mesas
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
+            <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <TableBar sx={{ fontSize: 32, color: 'success.main', mb: 1 }} />
+                  <Typography variant="h4" fontWeight="600">
+                    {getTotalCapacity()}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Capacidad total
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
+            <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+              <Card variant="outlined">
+                <CardContent sx={{ textAlign: 'center' }}>
+                  <Settings sx={{ fontSize: 32, color: 'info.main', mb: 1 }} />
+                  <Typography variant="h4" fontWeight="600">
+                    {((config.salonTables || 0) > 0 ? 1 : 0) + 
+                     ((config.highTables || 0) > 0 ? 1 : 0) + 
+                     ((config.terraceTables || 0) > 0 ? 1 : 0) + 
+                     ((config.barSeats || 0) > 0 ? 1 : 0)}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Zonas configuradas
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Box>
+          </Box>
+
+          <Paper variant="outlined" sx={{ p: 3 }}>
+            {/* Mesas de salón */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Restaurant color="primary" />
+                <Typography variant="h6" fontWeight="600">
+                  Salón Principal
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                  <TextField
+                    fullWidth
+                    label="Número de mesas"
+                    type="number"
+                    value={editing ? editConfig.salonTables : config.salonTables}
+                    onChange={(e) => updateConfig('salonTables', parseInt(e.target.value))}
+                    error={!!errors.salonTables}
+                    helperText={errors.salonTables}
+                    InputProps={{ readOnly: !editing }}
+                    inputProps={{ min: 1 }}
+                  />
+                </Box>
+                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                  <TextField
+                    fullWidth
+                    label="Capacidad total"
+                    type="number"
+                    value={editing ? editConfig.salonCapacity : config.salonCapacity}
+                    onChange={(e) => updateConfig('salonCapacity', parseInt(e.target.value))}
+                    error={!!errors.salonCapacity}
+                    helperText={errors.salonCapacity}
+                    InputProps={{ readOnly: !editing }}
+                    inputProps={{ min: 1 }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* Mesas altas */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <TableBar color="primary" />
+                <Typography variant="h6" fontWeight="600">
+                  Mesas Altas
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  (opcional)
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                  <TextField
+                    fullWidth
+                    label="Número de mesas altas"
+                    type="number"
+                    value={editing ? editConfig.highTables : (config.highTables || 0)}
+                    onChange={(e) => updateConfig('highTables', parseInt(e.target.value))}
+                    InputProps={{ readOnly: !editing }}
+                    inputProps={{ min: 0 }}
+                  />
+                </Box>
+                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                  <TextField
+                    fullWidth
+                    label="Capacidad de mesas altas"
+                    type="number"
+                    value={editing ? editConfig.highTablesCapacity : (config.highTablesCapacity || 0)}
+                    onChange={(e) => updateConfig('highTablesCapacity', parseInt(e.target.value))}
+                    error={!!errors.highTablesCapacity}
+                    helperText={errors.highTablesCapacity}
+                    InputProps={{ readOnly: !editing }}
+                    inputProps={{ min: 0 }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* Terraza */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Restaurant color="primary" />
+                <Typography variant="h6" fontWeight="600">
+                  Terraza
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  (opcional)
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                  <TextField
+                    fullWidth
+                    label="Número de mesas de terraza"
+                    type="number"
+                    value={editing ? editConfig.terraceTables : (config.terraceTables || 0)}
+                    onChange={(e) => updateConfig('terraceTables', parseInt(e.target.value))}
+                    InputProps={{ readOnly: !editing }}
+                    inputProps={{ min: 0 }}
+                  />
+                </Box>
+                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                  <TextField
+                    fullWidth
+                    label="Capacidad de terraza"
+                    type="number"
+                    value={editing ? editConfig.terraceCapacity : (config.terraceCapacity || 0)}
+                    onChange={(e) => updateConfig('terraceCapacity', parseInt(e.target.value))}
+                    error={!!errors.terraceCapacity}
+                    helperText={errors.terraceCapacity}
+                    InputProps={{ readOnly: !editing }}
+                    inputProps={{ min: 0 }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
+            {/* Barra */}
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <TableBar color="primary" />
+                <Typography variant="h6" fontWeight="600">
+                  Barra
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  (opcional)
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                  <TextField
+                    fullWidth
+                    label="Plazas en la barra"
+                    type="number"
+                    value={editing ? editConfig.barSeats : (config.barSeats || 0)}
+                    onChange={(e) => updateConfig('barSeats', parseInt(e.target.value))}
+                    InputProps={{ readOnly: !editing }}
+                    inputProps={{ min: 0 }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            {editing && (
+              <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleCancel}
+                  startIcon={<Cancel />}
+                  disabled={loading}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleSave}
+                  startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+                  disabled={loading}
+                >
+                  {loading ? 'Guardando...' : 'Guardar cambios'}
+                </Button>
+              </Box>
+            )}
+          </Paper>
+        </>
+      )}
+    </Box>
+  );
+
+  // Always render as dialog, never as inline content
+  return (
+    <Dialog
+      open={open || false}
+      onClose={onClose || (() => {})}
+      maxWidth="md"
+      fullWidth
+      PaperProps={{
+        sx: { borderRadius: 2 }
+      }}
+    >
+      <DialogTitle>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Settings color="primary" />
+          Configuración del Restaurante
+        </Box>
+      </DialogTitle>
+      <DialogContent>
+        {content}
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cerrar</Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
+
+export default RestaurantSettings;

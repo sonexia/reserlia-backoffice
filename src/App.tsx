@@ -1,11 +1,15 @@
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { useEffect, useState } from "react";
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, AppBar, Toolbar, Box, Button, Container } from '@mui/material';
+import { CssBaseline, AppBar, Toolbar, Box, Button, Container, IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { Settings, MoreVert } from '@mui/icons-material';
 import ReservationFormModal from "./components/ReservationFormModal";
 import ReservationTable from "./components/ReservationTable";
+import RestaurantSetup from "./components/RestaurantSetup";
+import RestaurantSettings from "./components/RestaurantSettings";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
+import { useRestaurantConfig } from "./hooks/useRestaurantConfig";
 import { toast } from 'react-toastify';
 import logoReserlia from './assets/logo-reserlia.png';
 import { reserliaTheme } from './theme/reserliaTheme';
@@ -18,6 +22,11 @@ function App() {
   const [reservations, setReservations] = useState<Array<Schema["Reservation"]["type"]>>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Schema["Reservation"]["type"] | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  
+  // Restaurant configuration hook
+  const { config, saving: configSaving, saveConfig, isFirstTimeSetup } = useRestaurantConfig();
 
   useEffect(() => {
     client.models.Reservation.observeQuery().subscribe({
@@ -69,6 +78,42 @@ function App() {
     }
   }
 
+  // Restaurant configuration handlers
+  const handleFirstTimeSetup = async (configData: Omit<Schema["RestaurantConfig"]["type"], 'id'>) => {
+    const success = await saveConfig(configData);
+    return success;
+  };
+
+  const handleConfigUpdate = async (configData: Omit<Schema["RestaurantConfig"]["type"], 'id'>) => {
+    await saveConfig(configData);
+  };
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setMenuAnchor(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+  };
+
+  const handleSettingsClick = () => {
+    setSettingsOpen(true);
+    handleMenuClose();
+  };
+
+  // Show first-time setup if no config exists
+  if (isFirstTimeSetup()) {
+    return (
+      <ThemeProvider theme={reserliaTheme}>
+        <CssBaseline />
+        <RestaurantSetup 
+          onComplete={handleFirstTimeSetup}
+          loading={configSaving}
+        />
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider theme={reserliaTheme}>
       <CssBaseline />
@@ -95,20 +140,48 @@ function App() {
                 </Box>
               </Box>
             </Box>
-            <Button 
-              variant="outlined" 
-              onClick={() => signOut()}
-              sx={{ 
-                color: 'text.primary', 
-                borderColor: '#e5e7eb',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  bgcolor: 'rgba(0, 201, 167, 0.1)'
-                }
-              }}
-            >
-              Cerrar sesión
-            </Button>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton
+                onClick={handleMenuOpen}
+                sx={{ 
+                  color: 'text.primary',
+                  '&:hover': {
+                    bgcolor: 'rgba(0, 201, 167, 0.1)'
+                  }
+                }}
+              >
+                <MoreVert />
+              </IconButton>
+              <Menu
+                anchorEl={menuAnchor}
+                open={Boolean(menuAnchor)}
+                onClose={handleMenuClose}
+                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+                className="reserlia-menu"
+              >
+                <MenuItem onClick={handleSettingsClick}>
+                  <ListItemIcon>
+                    <Settings fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Configuración del Restaurante</ListItemText>
+                </MenuItem>
+              </Menu>
+              <Button 
+                variant="outlined" 
+                onClick={() => signOut()}
+                sx={{ 
+                  color: 'text.primary', 
+                  borderColor: '#e5e7eb',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    bgcolor: 'rgba(0, 201, 167, 0.1)'
+                  }
+                }}
+              >
+                Cerrar sesión
+              </Button>
+            </Box>
           </Toolbar>
         </AppBar>
 
@@ -147,6 +220,15 @@ function App() {
           }}
           reservation={editingReservation}
           onSave={handleSave}
+        />
+
+        {/* Restaurant Settings Dialog */}
+        <RestaurantSettings
+          config={config}
+          onUpdate={handleConfigUpdate}
+          loading={configSaving}
+          open={settingsOpen}
+          onClose={() => setSettingsOpen(false)}
         />
       </Box>
     </ThemeProvider>

@@ -71,3 +71,9 @@
   color: #6b7280;
   font-size: 0.875rem;
 }
+
+/* Estilos para el menú desplegable */
+.reserlia-menu ul {
+  background-color: transparent !important;
+  color: inherit;
+}

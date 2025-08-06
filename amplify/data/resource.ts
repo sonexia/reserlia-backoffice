@@ -16,6 +16,18 @@ const schema = a.schema({
       notes: a.string(),   // Observaciones adicionales (opcional por defecto)
     })
     .authorization((allow) => [allow.owner()]),
+  
+  RestaurantConfig: a
+    .model({
+      salonTables: a.integer().required(), // Número de mesas de salón
+      salonCapacity: a.integer().required(), // Capacidad total de mesas de salón
+      highTables: a.integer().default(0), // Mesas altas (opcional)
+      highTablesCapacity: a.integer().default(0), // Capacidad de mesas altas
+      terraceTables: a.integer().default(0), // Mesas de terraza (opcional)
+      terraceCapacity: a.integer().default(0), // Capacidad de terraza
+      barSeats: a.integer().default(0), // Plazas en la barra (opcional)
+    })
+    .authorization((allow) => [allow.owner()]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
