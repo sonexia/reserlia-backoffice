@@ -39,6 +39,13 @@ export const useRestaurantConfig = () => {
           terraceTables: restaurantConfig.terraceTables !== null ? restaurantConfig.terraceTables : undefined,
           terraceCapacity: restaurantConfig.terraceCapacity !== null ? restaurantConfig.terraceCapacity : undefined,
           barSeats: restaurantConfig.barSeats !== null ? restaurantConfig.barSeats : undefined,
+          // Configuración avanzada
+          requiresDeposit: restaurantConfig.requiresDeposit !== null ? restaurantConfig.requiresDeposit : undefined,
+          depositType: restaurantConfig.depositType || undefined,
+          depositAmount: restaurantConfig.depositAmount !== null ? restaurantConfig.depositAmount : undefined,
+          askReservationReason: restaurantConfig.askReservationReason !== null ? restaurantConfig.askReservationReason : undefined,
+          askAllergies: restaurantConfig.askAllergies !== null ? restaurantConfig.askAllergies : undefined,
+          askFoodType: restaurantConfig.askFoodType !== null ? restaurantConfig.askFoodType : undefined,
         });
       } else {
         setConfig(null);
@@ -69,6 +76,13 @@ export const useRestaurantConfig = () => {
           terraceTables: newConfig.terraceTables !== undefined ? newConfig.terraceTables : null,
           terraceCapacity: newConfig.terraceCapacity !== undefined ? newConfig.terraceCapacity : null,
           barSeats: newConfig.barSeats !== undefined ? newConfig.barSeats : null,
+          // Configuración avanzada
+          requiresDeposit: newConfig.requiresDeposit !== undefined ? newConfig.requiresDeposit : null,
+          depositType: newConfig.depositType || null,
+          depositAmount: newConfig.depositAmount !== undefined ? newConfig.depositAmount : null,
+          askReservationReason: newConfig.askReservationReason !== undefined ? newConfig.askReservationReason : null,
+          askAllergies: newConfig.askAllergies !== undefined ? newConfig.askAllergies : null,
+          askFoodType: newConfig.askFoodType !== undefined ? newConfig.askFoodType : null,
         };
 
         const { data } = await client.models.RestaurantConfig.update(updateData);
@@ -83,6 +97,13 @@ export const useRestaurantConfig = () => {
             terraceTables: data.terraceTables || 0,
             terraceCapacity: data.terraceCapacity || 0,
             barSeats: data.barSeats || 0,
+            // Configuración avanzada
+            requiresDeposit: data.requiresDeposit || false,
+            depositType: data.depositType || 'FIXED_PER_RESERVATION',
+            depositAmount: data.depositAmount || undefined,
+            askReservationReason: data.askReservationReason || false,
+            askAllergies: data.askAllergies || false,
+            askFoodType: data.askFoodType || false,
           });
           toast.success('Configuración actualizada correctamente');
         }
@@ -97,6 +118,13 @@ export const useRestaurantConfig = () => {
           terraceTables: newConfig.terraceTables !== undefined ? newConfig.terraceTables : null,
           terraceCapacity: newConfig.terraceCapacity !== undefined ? newConfig.terraceCapacity : null,
           barSeats: newConfig.barSeats !== undefined ? newConfig.barSeats : null,
+          // Configuración avanzada
+          requiresDeposit: newConfig.requiresDeposit !== undefined ? newConfig.requiresDeposit : null,
+          depositType: newConfig.depositType || null,
+          depositAmount: newConfig.depositAmount !== undefined ? newConfig.depositAmount : null,
+          askReservationReason: newConfig.askReservationReason !== undefined ? newConfig.askReservationReason : null,
+          askAllergies: newConfig.askAllergies !== undefined ? newConfig.askAllergies : null,
+          askFoodType: newConfig.askFoodType !== undefined ? newConfig.askFoodType : null,
         };
 
         const { data } = await client.models.RestaurantConfig.create(createData);
@@ -111,6 +139,13 @@ export const useRestaurantConfig = () => {
             terraceTables: data.terraceTables || 0,
             terraceCapacity: data.terraceCapacity || 0,
             barSeats: data.barSeats || 0,
+            // Configuración avanzada
+            requiresDeposit: data.requiresDeposit || false,
+            depositType: data.depositType || 'FIXED_PER_RESERVATION',
+            depositAmount: data.depositAmount || undefined,
+            askReservationReason: data.askReservationReason || false,
+            askAllergies: data.askAllergies || false,
+            askFoodType: data.askFoodType || false,
           });
           toast.success('Configuración guardada correctamente');
         }

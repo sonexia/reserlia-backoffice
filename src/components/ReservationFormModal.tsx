@@ -41,6 +41,7 @@ export default function ReservationFormModal({
     reservation?.partySize || 2
   );
   const [tableNumber, setTableNumber] = useState(reservation?.tableNumber || "");
+  const [location, setLocation] = useState(reservation?.location || "");
   const [notes, setNotes] = useState(reservation?.notes || "");
   const [error, setError] = useState<string | null>(null);
 
@@ -52,12 +53,14 @@ export default function ReservationFormModal({
       setCustomerName(reservation.customerName ?? "");
       setPartySize(reservation.partySize ?? 1);
       setTableNumber(reservation.tableNumber ?? "");
+      setLocation(reservation.location ?? "");
       setNotes(reservation.notes ?? "");
     } else {
       setSelectedDate(dayjs());
       setCustomerName("");
       setPartySize(1);
       setTableNumber("");
+      setLocation("");
       setNotes("");
     }
     setError(null);
@@ -76,7 +79,7 @@ export default function ReservationFormModal({
     try {
       // Convertir a formato ISO8601 completo (lo que espera AWS AppSync/DynamoDB)
       const isoDateTime = selectedDate.toISOString();
-      onSave({ datetime: isoDateTime, customerName, partySize, tableNumber, notes });
+      onSave({ datetime: isoDateTime, customerName, partySize, tableNumber, location, notes });
     } catch (err) {
       console.error("Error al formatear la fecha:", err);
       setError("Formato de fecha incorrecto. Por favor verifica.");
@@ -246,6 +249,15 @@ export default function ReservationFormModal({
               label="Mesa asignada"
               value={tableNumber}
               onChange={(e) => setTableNumber(e.target.value)}
+              variant="outlined"
+              sx={{ mb: 3 }}
+            />
+            
+            <TextField
+              fullWidth
+              label="Ubicación (salón, terraza, barra, etc.)"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
               variant="outlined"
               sx={{ mb: 3 }}
             />

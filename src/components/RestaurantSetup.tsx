@@ -3,17 +3,23 @@ import {
   Box,
   Paper,
   Typography,
-  TextField,
-  Button,
   Stepper,
   Step,
   StepLabel,
   StepContent,
+  Button,
+  TextField,
+  Stack,
+  FormControl,
+  FormControlLabel,
+  Switch,
+  RadioGroup,
+  Radio,
+  FormLabel,
   Alert,
-  CircularProgress,
-  Stack
+  CircularProgress
 } from '@mui/material';
-import { Restaurant, TableBar } from '@mui/icons-material';
+import { Restaurant, TableBar, Settings } from '@mui/icons-material';
 
 // Importamos la interfaz RestaurantConfig del hook para mantener consistencia
 import { RestaurantConfig } from '../hooks/useRestaurantConfig';
@@ -34,6 +40,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     terraceTables: '0',
     terraceCapacity: '0',
     barSeats: '0',
+    depositAmount: '',
   });
 
   // Estado real del config con valores numéricos
@@ -45,6 +52,13 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     terraceTables: 0,
     terraceCapacity: 0,
     barSeats: 0,
+    // Configuración avanzada
+    requiresDeposit: false,
+    depositType: 'FIXED_PER_RESERVATION',
+    depositAmount: undefined,
+    askReservationReason: false,
+    askAllergies: false,
+    askFoodType: false,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -107,25 +121,26 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
   };
 
   // Función para actualizar solo el valor del input (como string)
-  const handleInputChange = (field: keyof typeof inputValues, value: string) => {
-    // Permitimos que el campo esté vacío durante la edición
-    setInputValues(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleInputChange = (field: string, value: string) => {
+    // Actualizar el valor visible (string)
+    setInputValues(prev => ({ ...prev, [field]: value }));
     
-    // Si el campo está vacío, usamos 0 para el config real, sino parseamos el valor
-    const numValue = value.trim() === '' ? 0 : parseInt(value);
-    setConfig(prev => ({
-      ...prev,
-      [field]: numValue
-    }));
+    // Manejar campos decimales (como depositAmount)
+    if (field === 'depositAmount') {
+      const numValue = value === '' ? undefined : parseFloat(value);
+      setConfig(prev => ({ ...prev, [field]: numValue }));
+    } else {
+      // Campos enteros
+      const numValue = value === '' ? 0 : parseInt(value);
+      setConfig(prev => ({ ...prev, [field]: numValue }));
+    }
     
-    // Limpiar errores del campo cuando se modifica
-    if (errors[field as keyof RestaurantConfig]) {
+    // Limpiar errores si el campo ahora tiene valor válido
+    const numericValue = field === 'depositAmount' ? parseFloat(value) : parseInt(value);
+    if (numericValue > 0) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        delete newErrors[field as keyof RestaurantConfig];
+        delete newErrors[field];
         return newErrors;
       });
     }
@@ -151,6 +166,11 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
       label: 'Barra (opcional)',
       description: 'Configure la barra si tiene una',
       icon: <TableBar />
+    },
+    {
+      label: 'Configuración avanzada',
+      description: 'Configure opciones adicionales para las reservas',
+      icon: <Settings />
     }
   ];
 
@@ -300,6 +320,93 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                         helperText="Deje en 0 si no tiene barra"
                         inputProps={{ min: 0 }}
                       />
+                    </Box>
+                  </Stack>
+                )}
+
+                {index === 4 && (
+                  <Stack spacing={3} sx={{ width: '100%' }}>
+                    {/* Configuración de paga y señal */}
+                    <Box>
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={config.requiresDeposit || false}
+                            onChange={(e) => setConfig(prev => ({ ...prev, requiresDeposit: e.target.checked }))}
+                          />
+                        }
+                        label="¿Quieres que el cliente realice una paga y señal?"
+                      />
+                      
+                      {config.requiresDeposit && (
+                        <Box sx={{ mt: 2, ml: 2 }}>
+                          <FormControl component="fieldset">
+                            <FormLabel component="legend" sx={{ mb: 1 }}>Tipo de paga y señal:</FormLabel>
+                            <RadioGroup
+                              value={config.depositType}
+                              onChange={(e) => setConfig(prev => ({ ...prev, depositType: e.target.value as 'FIXED_PER_RESERVATION' | 'PER_PERSON' }))}
+                            >
+                              <FormControlLabel
+                                value="FIXED_PER_RESERVATION"
+                                control={<Radio />}
+                                label="Valor fijo por reserva"
+                              />
+                              <FormControlLabel
+                                value="PER_PERSON"
+                                control={<Radio />}
+                                label="Valor por persona"
+                              />
+                            </RadioGroup>
+                          </FormControl>
+                          
+                          <TextField
+                            fullWidth
+                            label={`Cantidad (€) ${config.depositType === 'PER_PERSON' ? 'por persona' : 'por reserva'}`}
+                            type="number"
+                            value={inputValues.depositAmount}
+                            onChange={(e) => handleInputChange('depositAmount', e.target.value)}
+                            sx={{ mt: 2 }}
+                            inputProps={{ min: 0, step: 0.01 }}
+                          />
+                        </Box>
+                      )}
+                    </Box>
+
+                    {/* Preguntas adicionales */}
+                    <Box>
+                      <Typography variant="h6" sx={{ mb: 2 }}>Preguntas adicionales para las reservas:</Typography>
+                      
+                      <Stack spacing={1}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={config.askReservationReason || false}
+                              onChange={(e) => setConfig(prev => ({ ...prev, askReservationReason: e.target.checked }))}
+                            />
+                          }
+                          label="¿Preguntar por el motivo de la reserva? (cumpleaños, aniversario, etc.)"
+                        />
+                        
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={config.askAllergies || false}
+                              onChange={(e) => setConfig(prev => ({ ...prev, askAllergies: e.target.checked }))}
+                            />
+                          }
+                          label="¿Preguntar por alergias o intolerancias?"
+                        />
+                        
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={config.askFoodType || false}
+                              onChange={(e) => setConfig(prev => ({ ...prev, askFoodType: e.target.checked }))}
+                            />
+                          }
+                          label="¿Preguntar por el tipo de comida? (menú, carta, degustación, etc.)"
+                        />
+                      </Stack>
                     </Box>
                   </Stack>
                 )}

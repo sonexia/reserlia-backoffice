@@ -13,6 +13,7 @@ const schema = a.schema({
       customerName: a.string().required(), // Nombre del cliente (requerido)
       partySize: a.integer().required(), // Número de personas (requerido)
       tableNumber: a.string(), // Mesa asignada (opcional por defecto)
+      location: a.string(), // Ubicación de la reserva (salón, terraza, barra, etc.)
       notes: a.string(),   // Observaciones adicionales (opcional por defecto)
     })
     .authorization((allow) => [allow.owner()]),
@@ -26,6 +27,16 @@ const schema = a.schema({
       terraceTables: a.integer().default(0), // Mesas de terraza (opcional)
       terraceCapacity: a.integer().default(0), // Capacidad de terraza
       barSeats: a.integer().default(0), // Plazas en la barra (opcional)
+      
+      // Configuración de paga y señal
+      requiresDeposit: a.boolean().default(false), // ¿Requiere paga y señal?
+      depositType: a.enum(['FIXED_PER_RESERVATION', 'PER_PERSON']), // Tipo de paga y señal
+      depositAmount: a.float(), // Cantidad de la paga y señal
+      
+      // Configuración de preguntas adicionales
+      askReservationReason: a.boolean().default(false), // ¿Preguntar motivo de reserva?
+      askAllergies: a.boolean().default(false), // ¿Preguntar por alergias?
+      askFoodType: a.boolean().default(false), // ¿Preguntar por tipo de comida?
     })
     .authorization((allow) => [allow.owner()]),
 });
