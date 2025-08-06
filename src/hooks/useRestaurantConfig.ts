@@ -5,15 +5,10 @@ import { toast } from 'react-toastify';
 
 const client = generateClient<Schema>();
 
-export interface RestaurantConfig {
-  id?: string;
-  salonTables: number;
-  salonCapacity: number;
-  highTables?: number;
-  highTablesCapacity?: number;
-  terraceTables?: number;
-  terraceCapacity?: number;
-  barSeats?: number;
+// Use el tipo generado por Amplify para mayor compatibilidad
+export interface RestaurantConfig extends Omit<Schema["RestaurantConfig"]["type"], 'createdAt' | 'updatedAt'> {
+  // No necesitamos definir propiedades adicionales ya que las heredamos del tipo de Amplify
+  // Omitimos createdAt y updatedAt porque son campos autogenerados que no manipulamos directamente
 }
 
 export const useRestaurantConfig = () => {
@@ -34,15 +29,16 @@ export const useRestaurantConfig = () => {
       // Debería haber solo una configuración por usuario
       if (configs && configs.length > 0) {
         const restaurantConfig = configs[0];
+        // Preservar valores nulos como undefined para mejor compatibilidad con TypeScript
         setConfig({
           id: restaurantConfig.id,
           salonTables: restaurantConfig.salonTables,
           salonCapacity: restaurantConfig.salonCapacity,
-          highTables: restaurantConfig.highTables || 0,
-          highTablesCapacity: restaurantConfig.highTablesCapacity || 0,
-          terraceTables: restaurantConfig.terraceTables || 0,
-          terraceCapacity: restaurantConfig.terraceCapacity || 0,
-          barSeats: restaurantConfig.barSeats || 0,
+          highTables: restaurantConfig.highTables !== null ? restaurantConfig.highTables : undefined,
+          highTablesCapacity: restaurantConfig.highTablesCapacity !== null ? restaurantConfig.highTablesCapacity : undefined,
+          terraceTables: restaurantConfig.terraceTables !== null ? restaurantConfig.terraceTables : undefined,
+          terraceCapacity: restaurantConfig.terraceCapacity !== null ? restaurantConfig.terraceCapacity : undefined,
+          barSeats: restaurantConfig.barSeats !== null ? restaurantConfig.barSeats : undefined,
         });
       } else {
         setConfig(null);
@@ -56,21 +52,23 @@ export const useRestaurantConfig = () => {
     }
   };
 
-  const saveConfig = async (newConfig: Omit<RestaurantConfig, 'id'>) => {
+  const saveConfig = async (newConfig: Omit<RestaurantConfig, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
       setSaving(true);
 
       if (config && config.id) {
         // Actualizar configuración existente
+        // Al actualizar, solo necesitamos especificar el id y los campos que queremos modificar
+        // El tipo parcial permite omitir createdAt y updatedAt que son gestionados internamente
         const updateData = {
           id: config.id,
           salonTables: newConfig.salonTables,
           salonCapacity: newConfig.salonCapacity,
-          highTables: newConfig.highTables || 0,
-          highTablesCapacity: newConfig.highTablesCapacity || 0,
-          terraceTables: newConfig.terraceTables || 0,
-          terraceCapacity: newConfig.terraceCapacity || 0,
-          barSeats: newConfig.barSeats || 0,
+          highTables: newConfig.highTables !== undefined ? newConfig.highTables : null,
+          highTablesCapacity: newConfig.highTablesCapacity !== undefined ? newConfig.highTablesCapacity : null,
+          terraceTables: newConfig.terraceTables !== undefined ? newConfig.terraceTables : null,
+          terraceCapacity: newConfig.terraceCapacity !== undefined ? newConfig.terraceCapacity : null,
+          barSeats: newConfig.barSeats !== undefined ? newConfig.barSeats : null,
         };
 
         const { data } = await client.models.RestaurantConfig.update(updateData);
@@ -90,14 +88,15 @@ export const useRestaurantConfig = () => {
         }
       } else {
         // Crear nueva configuración
+        // Para crear una configuración, también usamos null para los campos opcionales en lugar de 0
         const createData = {
           salonTables: newConfig.salonTables,
           salonCapacity: newConfig.salonCapacity,
-          highTables: newConfig.highTables || 0,
-          highTablesCapacity: newConfig.highTablesCapacity || 0,
-          terraceTables: newConfig.terraceTables || 0,
-          terraceCapacity: newConfig.terraceCapacity || 0,
-          barSeats: newConfig.barSeats || 0,
+          highTables: newConfig.highTables !== undefined ? newConfig.highTables : null,
+          highTablesCapacity: newConfig.highTablesCapacity !== undefined ? newConfig.highTablesCapacity : null,
+          terraceTables: newConfig.terraceTables !== undefined ? newConfig.terraceTables : null,
+          terraceCapacity: newConfig.terraceCapacity !== undefined ? newConfig.terraceCapacity : null,
+          barSeats: newConfig.barSeats !== undefined ? newConfig.barSeats : null,
         };
 
         const { data } = await client.models.RestaurantConfig.create(createData);

@@ -9,7 +9,7 @@ import RestaurantSetup from "./components/RestaurantSetup";
 import RestaurantSettings from "./components/RestaurantSettings";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import { useRestaurantConfig } from "./hooks/useRestaurantConfig";
+import { useRestaurantConfig, RestaurantConfig } from "./hooks/useRestaurantConfig";
 import { toast } from 'react-toastify';
 import logoReserlia from './assets/logo-reserlia.png';
 import { reserliaTheme } from './theme/reserliaTheme';
@@ -79,12 +79,12 @@ function App() {
   }
 
   // Restaurant configuration handlers
-  const handleFirstTimeSetup = async (configData: Omit<Schema["RestaurantConfig"]["type"], 'id'>) => {
+  const handleFirstTimeSetup = async (configData: Omit<RestaurantConfig, 'id'>) => {
     const success = await saveConfig(configData);
     return success;
   };
 
-  const handleConfigUpdate = async (configData: Omit<Schema["RestaurantConfig"]["type"], 'id'>) => {
+  const handleConfigUpdate = async (configData: Omit<RestaurantConfig, 'id'>) => {
     await saveConfig(configData);
   };
 

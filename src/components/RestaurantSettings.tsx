@@ -25,16 +25,8 @@ import {
   Settings
 } from '@mui/icons-material';
 
-interface RestaurantConfig {
-  id?: string;
-  salonTables: number;
-  salonCapacity: number;
-  highTables?: number;
-  highTablesCapacity?: number;
-  terraceTables?: number;
-  terraceCapacity?: number;
-  barSeats?: number;
-}
+// Importamos la interfaz de nuestro hook para mantener consistencia
+import { RestaurantConfig } from '../hooks/useRestaurantConfig';
 
 interface RestaurantSettingsProps {
   config: RestaurantConfig | null;
@@ -52,7 +44,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
   onClose
 }) => {
   const [editing, setEditing] = useState(false);
-  const [editConfig, setEditConfig] = useState<RestaurantConfig>({
+  // Usamos Omit<RestaurantConfig, 'id'> para omitir el id en el estado inicial
+  const [editConfig, setEditConfig] = useState<Omit<RestaurantConfig, 'id'>>({    
     salonTables: 0,
     salonCapacity: 0,
     highTables: 0,
@@ -121,14 +114,12 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
 
   const handleCancel = () => {
     if (config) {
-      setEditConfig({
-        ...config,
-        highTables: config.highTables || 0,
-        highTablesCapacity: config.highTablesCapacity || 0,
-        terraceTables: config.terraceTables || 0,
-        terraceCapacity: config.terraceCapacity || 0,
-        barSeats: config.barSeats || 0,
-      });
+      // Reestablecer el formulario al estado actual de la configuración
+      // Usamos spread para extraer todos los campos excepto el id
+      // El prefijo _ indica a ESLint que esta variable se ignora intencionalmente
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { id: _, ...configWithoutId } = config;
+      setEditConfig(configWithoutId);
     }
     setEditing(false);
     setErrors({});

@@ -9,30 +9,23 @@ import {
   Step,
   StepLabel,
   StepContent,
-  Grid,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Stack
 } from '@mui/material';
 import { Restaurant, TableBar } from '@mui/icons-material';
 
-interface RestaurantConfig {
-  salonTables: number;
-  salonCapacity: number;
-  highTables?: number;
-  highTablesCapacity?: number;
-  terraceTables?: number;
-  terraceCapacity?: number;
-  barSeats?: number;
-}
+// Importamos la interfaz RestaurantConfig del hook para mantener consistencia
+import { RestaurantConfig } from '../hooks/useRestaurantConfig';
 
 interface RestaurantSetupProps {
-  onComplete: (config: RestaurantConfig) => void;
+  onComplete: (config: Omit<RestaurantConfig, 'id'>) => void;
   loading?: boolean;
 }
 
 const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading = false }) => {
   const [activeStep, setActiveStep] = useState(0);
-  const [config, setConfig] = useState<RestaurantConfig>({
+  const [config, setConfig] = useState<Omit<RestaurantConfig, 'id'>>({
     salonTables: 0,
     salonCapacity: 0,
     highTables: 0,
@@ -189,8 +182,8 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                 <Typography sx={{ mb: 2 }}>{step.description}</Typography>
                 
                 {index === 0 && (
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
+                  <Stack direction="row" spacing={2} flexWrap="wrap">
+                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
                       <TextField
                         fullWidth
                         label="Número de mesas de salón"
@@ -201,25 +194,25 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                         helperText={errors.salonTables}
                         inputProps={{ min: 1 }}
                       />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
+                    </Box>
+                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
                       <TextField
                         fullWidth
-                        label="Capacidad total de salón"
+                        label="Capacidad total del salón"
                         type="number"
                         value={config.salonCapacity}
                         onChange={(e) => updateConfig('salonCapacity', parseInt(e.target.value))}
                         error={!!errors.salonCapacity}
-                        helperText={errors.salonCapacity || "Total de personas que pueden sentarse en el salón"}
+                        helperText={errors.salonCapacity}
                         inputProps={{ min: 1 }}
                       />
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Stack>
                 )}
 
                 {index === 1 && (
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
+                  <Stack spacing={2}>
+                    <Box width="100%">
                       <TextField
                         fullWidth
                         label="Número de mesas altas"
@@ -229,8 +222,8 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                         helperText="Deje en 0 si no tiene mesas altas"
                         inputProps={{ min: 0 }}
                       />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
+                    </Box>
+                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
                       <TextField
                         fullWidth
                         label="Capacidad de mesas altas"
@@ -242,13 +235,13 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                         inputProps={{ min: 0 }}
                         disabled={!config.highTables || config.highTables === 0}
                       />
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Stack>
                 )}
 
                 {index === 2 && (
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
+                  <Stack direction="row" spacing={2} flexWrap="wrap">
+                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
                       <TextField
                         fullWidth
                         label="Número de mesas de terraza"
@@ -258,8 +251,8 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                         helperText="Deje en 0 si no tiene terraza"
                         inputProps={{ min: 0 }}
                       />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
+                    </Box>
+                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
                       <TextField
                         fullWidth
                         label="Capacidad de terraza"
@@ -271,13 +264,13 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                         inputProps={{ min: 0 }}
                         disabled={!config.terraceTables || config.terraceTables === 0}
                       />
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Stack>
                 )}
 
                 {index === 3 && (
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
+                  <Stack direction="row" spacing={2} flexWrap="wrap">
+                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
                       <TextField
                         fullWidth
                         label="Plazas en la barra"
@@ -287,8 +280,8 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                         helperText="Deje en 0 si no tiene barra"
                         inputProps={{ min: 0 }}
                       />
-                    </Grid>
-                  </Grid>
+                    </Box>
+                  </Stack>
                 )}
 
                 <Box sx={{ mb: 2, mt: 3 }}>
