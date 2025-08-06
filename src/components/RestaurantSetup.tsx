@@ -25,6 +25,18 @@ interface RestaurantSetupProps {
 
 const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading = false }) => {
   const [activeStep, setActiveStep] = useState(0);
+  // Mantenemos los valores del formulario como strings para permitir campos vacíos durante la edición
+  const [inputValues, setInputValues] = useState({
+    salonTables: '0',
+    salonCapacity: '0',
+    highTables: '0',
+    highTablesCapacity: '0',
+    terraceTables: '0',
+    terraceCapacity: '0',
+    barSeats: '0',
+  });
+
+  // Estado real del config con valores numéricos
   const [config, setConfig] = useState<Omit<RestaurantConfig, 'id'>>({
     salonTables: 0,
     salonCapacity: 0,
@@ -94,16 +106,26 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     }
   };
 
-  const updateConfig = (field: keyof RestaurantConfig, value: number) => {
+  // Función para actualizar solo el valor del input (como string)
+  const handleInputChange = (field: keyof typeof inputValues, value: string) => {
+    // Permitimos que el campo esté vacío durante la edición
+    setInputValues(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    
+    // Si el campo está vacío, usamos 0 para el config real, sino parseamos el valor
+    const numValue = value.trim() === '' ? 0 : parseInt(value);
     setConfig(prev => ({
       ...prev,
-      [field]: value || 0
+      [field]: numValue
     }));
+    
     // Limpiar errores del campo cuando se modifica
-    if (errors[field]) {
+    if (errors[field as keyof RestaurantConfig]) {
       setErrors(prev => {
         const newErrors = { ...prev };
-        delete newErrors[field];
+        delete newErrors[field as keyof RestaurantConfig];
         return newErrors;
       });
     }
@@ -136,32 +158,30 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     <Box
       sx={{
         minHeight: '100vh',
-        bgcolor: 'grey.50',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        p: 2
+        p: { xs: 1, sm: 2 },
+        width: '100%'
       }}
     >
       <Paper
         elevation={3}
         sx={{
+          p: { xs: 2, sm: 3 },
+          maxWidth: 600,
+          mx: 'auto',
           width: '100%',
-          maxWidth: 800,
-          p: 4,
-          borderRadius: 3
+          overflow: 'hidden'
         }}
       >
-        <Box sx={{ textAlign: 'center', mb: 4 }}>
-          <Restaurant sx={{ fontSize: 48, color: 'primary.main', mb: 2 }} />
-          <Typography variant="h4" component="h1" fontWeight="600" gutterBottom>
-            ¡Bienvenido a Reserlia!
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Para comenzar, necesitamos conocer la configuración de su restaurante.
-            Esta información nos ayudará a gestionar mejor sus reservas.
-          </Typography>
-        </Box>
+        <Typography variant="h4" align="center" sx={{ mb: 2, fontSize: { xs: '1.75rem', sm: '2.125rem' } }}>
+          ¡Bienvenido a Reserlia!
+        </Typography>
+        <Typography variant="body1" align="center" sx={{ mb: 3, px: { xs: 1, sm: 2 } }}>
+          Para comenzar, necesitamos conocer la configuración de su restaurante.
+          Esta información nos ayudará a gestionar mejor sus reservas.
+        </Typography>
 
         <Stepper activeStep={activeStep} orientation="vertical">
           {steps.map((step, index) => (
@@ -178,30 +198,30 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                   {step.label}
                 </Box>
               </StepLabel>
-              <StepContent>
-                <Typography sx={{ mb: 2 }}>{step.description}</Typography>
+              <StepContent sx={{ py: { xs: 1, sm: 1.5 } }}>
+                <Typography sx={{ mb: { xs: 1, sm: 2 } }}>{step.description}</Typography>
                 
                 {index === 0 && (
-                  <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
+                    <Box sx={{ width: '100%' }}>
                       <TextField
                         fullWidth
                         label="Número de mesas de salón"
                         type="number"
-                        value={config.salonTables}
-                        onChange={(e) => updateConfig('salonTables', parseInt(e.target.value))}
+                        value={inputValues.salonTables}
+                        onChange={(e) => handleInputChange('salonTables', e.target.value)}
                         error={!!errors.salonTables}
                         helperText={errors.salonTables}
                         inputProps={{ min: 1 }}
                       />
                     </Box>
-                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                    <Box sx={{ width: '100%' }}>
                       <TextField
                         fullWidth
                         label="Capacidad total del salón"
                         type="number"
-                        value={config.salonCapacity}
-                        onChange={(e) => updateConfig('salonCapacity', parseInt(e.target.value))}
+                        value={inputValues.salonCapacity}
+                        onChange={(e) => handleInputChange('salonCapacity', e.target.value)}
                         error={!!errors.salonCapacity}
                         helperText={errors.salonCapacity}
                         inputProps={{ min: 1 }}
@@ -211,25 +231,25 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                 )}
 
                 {index === 1 && (
-                  <Stack spacing={2}>
-                    <Box width="100%">
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
+                    <Box sx={{ width: '100%' }}>
                       <TextField
                         fullWidth
                         label="Número de mesas altas"
                         type="number"
-                        value={config.highTables}
-                        onChange={(e) => updateConfig('highTables', parseInt(e.target.value))}
+                        value={inputValues.highTables}
+                        onChange={(e) => handleInputChange('highTables', e.target.value)}
                         helperText="Deje en 0 si no tiene mesas altas"
                         inputProps={{ min: 0 }}
                       />
                     </Box>
-                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                    <Box sx={{ width: '100%' }}>
                       <TextField
                         fullWidth
                         label="Capacidad de mesas altas"
                         type="number"
-                        value={config.highTablesCapacity}
-                        onChange={(e) => updateConfig('highTablesCapacity', parseInt(e.target.value))}
+                        value={inputValues.highTablesCapacity}
+                        onChange={(e) => handleInputChange('highTablesCapacity', e.target.value)}
                         error={!!errors.highTablesCapacity}
                         helperText={errors.highTablesCapacity || "Total de personas en mesas altas"}
                         inputProps={{ min: 0 }}
@@ -240,25 +260,25 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                 )}
 
                 {index === 2 && (
-                  <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
+                    <Box sx={{ width: '100%' }}>
                       <TextField
                         fullWidth
                         label="Número de mesas de terraza"
                         type="number"
-                        value={config.terraceTables}
-                        onChange={(e) => updateConfig('terraceTables', parseInt(e.target.value))}
+                        value={inputValues.terraceTables}
+                        onChange={(e) => handleInputChange('terraceTables', e.target.value)}
                         helperText="Deje en 0 si no tiene terraza"
                         inputProps={{ min: 0 }}
                       />
                     </Box>
-                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                    <Box sx={{ width: '100%' }}>
                       <TextField
                         fullWidth
                         label="Capacidad de terraza"
                         type="number"
-                        value={config.terraceCapacity}
-                        onChange={(e) => updateConfig('terraceCapacity', parseInt(e.target.value))}
+                        value={inputValues.terraceCapacity}
+                        onChange={(e) => handleInputChange('terraceCapacity', e.target.value)}
                         error={!!errors.terraceCapacity}
                         helperText={errors.terraceCapacity || "Total de personas en la terraza"}
                         inputProps={{ min: 0 }}
@@ -269,14 +289,14 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                 )}
 
                 {index === 3 && (
-                  <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <Box sx={{ flex: '1 1 300px', minWidth: '250px' }}>
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
+                    <Box sx={{ width: '100%' }}>
                       <TextField
                         fullWidth
                         label="Plazas en la barra"
                         type="number"
-                        value={config.barSeats}
-                        onChange={(e) => updateConfig('barSeats', parseInt(e.target.value))}
+                        value={inputValues.barSeats}
+                        onChange={(e) => handleInputChange('barSeats', e.target.value)}
                         helperText="Deje en 0 si no tiene barra"
                         inputProps={{ min: 0 }}
                       />
@@ -284,8 +304,8 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                   </Stack>
                 )}
 
-                <Box sx={{ mb: 2, mt: 3 }}>
-                  <div>
+                <Box sx={{ mt: 0, mb: 0 }}>
+                  <div style={{ marginTop: '8px' }}>
                     {index === steps.length - 1 ? (
                       <Button
                         variant="contained"
