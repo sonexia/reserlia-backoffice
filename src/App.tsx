@@ -1,8 +1,8 @@
 import { useAuthenticator } from '@aws-amplify/ui-react';
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { ThemeProvider } from '@mui/material/styles';
-import { CssBaseline, AppBar, Toolbar, Box, Button, Container, IconButton, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
-import { Settings, MoreVert } from '@mui/icons-material';
+import { CssBaseline, AppBar, Toolbar, Box, Button, Container, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
+import { Settings, MoreVert, Logout } from '@mui/icons-material';
 import ReservationFormModal from "./components/ReservationFormModal";
 import ReservationTable from "./components/ReservationTable";
 import RestaurantSetup from "./components/RestaurantSetup";
@@ -24,6 +24,10 @@ function App() {
   const [editingReservation, setEditingReservation] = useState<Schema["Reservation"]["type"] | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  
+  // Filter state for reservations
+  type FilterType = 'all' | 'lunch' | 'dinner';
+  const [reservationFilter, setReservationFilter] = useState<FilterType>('all');
   
   // Restaurant configuration hook
   const { config, saving: configSaving, saveConfig, isFirstTimeSetup } = useRestaurantConfig();
@@ -101,6 +105,43 @@ function App() {
     handleMenuClose();
   };
 
+  const handleLogoutClick = () => {
+    signOut();
+    handleMenuClose();
+  };
+
+  // Filter reservations based on current filter
+  const filteredReservations = useMemo(() => {
+    if (reservationFilter === 'all') {
+      return reservations;
+    }
+
+    const today = new Date();
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const todayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    const lunchCutoff = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 18, 0, 0);
+
+    return reservations.filter(reservation => {
+      const reservationDate = new Date(reservation.datetime);
+      
+      // Check if reservation is today
+      const isToday = reservationDate >= todayStart && reservationDate <= todayEnd;
+      
+      if (!isToday) {
+        return false;
+      }
+
+      // Filter by lunch or dinner
+      if (reservationFilter === 'lunch') {
+        return reservationDate < lunchCutoff;
+      } else if (reservationFilter === 'dinner') {
+        return reservationDate >= lunchCutoff;
+      }
+
+      return false;
+    });
+  }, [reservations, reservationFilter]);
+
   // Show first-time setup if no config exists
   if (isFirstTimeSetup()) {
     return (
@@ -166,21 +207,13 @@ function App() {
                   </ListItemIcon>
                   <ListItemText>Configuración del Restaurante</ListItemText>
                 </MenuItem>
+                <MenuItem onClick={handleLogoutClick}>
+                  <ListItemIcon>
+                    <Logout fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Cerrar sesión</ListItemText>
+                </MenuItem>
               </Menu>
-              <Button 
-                variant="outlined" 
-                onClick={() => signOut()}
-                sx={{ 
-                  color: 'text.primary', 
-                  borderColor: '#e5e7eb',
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    bgcolor: 'rgba(0, 201, 167, 0.1)'
-                  }
-                }}
-              >
-                Cerrar sesión
-              </Button>
             </Box>
           </Toolbar>
         </AppBar>
@@ -205,8 +238,39 @@ function App() {
             </Button>
           </Box>
 
+          {/* Filter buttons */}
+          <Box sx={{ mb: 3, display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Box sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.secondary', mr: 1 }}>
+              Filtrar por:
+            </Box>
+            <Chip
+              label="Todas las reservas"
+              variant={reservationFilter === 'all' ? 'filled' : 'outlined'}
+              color={reservationFilter === 'all' ? 'primary' : 'default'}
+              onClick={() => setReservationFilter('all')}
+              sx={{ cursor: 'pointer' }}
+            />
+            <Chip
+              label="Comidas hoy"
+              variant={reservationFilter === 'lunch' ? 'filled' : 'outlined'}
+              color={reservationFilter === 'lunch' ? 'primary' : 'default'}
+              onClick={() => setReservationFilter('lunch')}
+              sx={{ cursor: 'pointer' }}
+            />
+            <Chip
+              label="Cenas hoy"
+              variant={reservationFilter === 'dinner' ? 'filled' : 'outlined'}
+              color={reservationFilter === 'dinner' ? 'primary' : 'default'}
+              onClick={() => setReservationFilter('dinner')}
+              sx={{ cursor: 'pointer' }}
+            />
+            <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', ml: 2 }}>
+              {filteredReservations.length} {filteredReservations.length === 1 ? 'reserva' : 'reservas'}
+            </Box>
+          </Box>
+
           <ReservationTable
-            reservations={reservations}
+            reservations={filteredReservations}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />

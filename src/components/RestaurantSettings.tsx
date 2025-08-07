@@ -10,7 +10,6 @@ import {
   CircularProgress,
   Card,
   CardContent,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -25,7 +24,6 @@ import {
 import {
   Restaurant,
   TableBar,
-  Edit,
   Save,
   Cancel,
   Settings
@@ -49,7 +47,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
   open = false,
   onClose
 }) => {
-  const [editing, setEditing] = useState(false);
+  // Removed editing state - fields are always editable now
   // Usamos Omit<RestaurantConfig, 'id'> para omitir el id en el estado inicial
   const [editConfig, setEditConfig] = useState<Omit<RestaurantConfig, 'id'>>({
     salonTables: 0,
@@ -128,7 +126,6 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
   const handleSave = () => {
     if (validate()) {
       onUpdate(editConfig);
-      setEditing(false);
     }
   };
 
@@ -141,7 +138,6 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
       const { id: _, ...configWithoutId } = config;
       setEditConfig(configWithoutId);
     }
-    setEditing(false);
     setErrors({});
   };
 
@@ -177,22 +173,11 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
 
   const content = (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Settings color="primary" />
-          <Typography variant="h5" fontWeight="600">
-            Configuración del Restaurante
-          </Typography>
-        </Box>
-        {!editing && (
-          <IconButton
-            onClick={() => setEditing(true)}
-            color="primary"
-            sx={{ bgcolor: 'primary.light', '&:hover': { bgcolor: 'primary.main' } }}
-          >
-            <Edit />
-          </IconButton>
-        )}
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+        <Settings color="primary" sx={{ mr: 1 }} />
+        <Typography variant="h5" fontWeight="600">
+          Configuración del Restaurante
+        </Typography>
       </Box>
 
       {!config && !loading && (
@@ -268,27 +253,27 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                 <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
                   <TextField
                     fullWidth
-                    label="Número de mesas"
+                    label="Número de mesas de salón"
                     type="number"
-                    value={editing ? editConfig.salonTables : config.salonTables}
+                    value={editConfig.salonTables}
                     onChange={(e) => updateConfig('salonTables', parseInt(e.target.value))}
                     error={!!errors.salonTables}
                     helperText={errors.salonTables}
-                    InputProps={{ readOnly: !editing }}
                     inputProps={{ min: 1 }}
+                    sx={{ maxWidth: 300 }}
                   />
                 </Box>
                 <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
                   <TextField
                     fullWidth
-                    label="Capacidad total"
+                    label="Capacidad total del salón (personas)"
                     type="number"
-                    value={editing ? editConfig.salonCapacity : config.salonCapacity}
+                    value={editConfig.salonCapacity}
                     onChange={(e) => updateConfig('salonCapacity', parseInt(e.target.value))}
                     error={!!errors.salonCapacity}
                     helperText={errors.salonCapacity}
-                    InputProps={{ readOnly: !editing }}
                     inputProps={{ min: 1 }}
+                    sx={{ maxWidth: 300 }}
                   />
                 </Box>
               </Box>
@@ -313,9 +298,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     fullWidth
                     label="Número de mesas altas"
                     type="number"
-                    value={editing ? editConfig.highTables : (config.highTables || 0)}
+                    value={editConfig.highTables || 0}
                     onChange={(e) => updateConfig('highTables', parseInt(e.target.value))}
-                    InputProps={{ readOnly: !editing }}
                     inputProps={{ min: 0 }}
                   />
                 </Box>
@@ -324,11 +308,10 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     fullWidth
                     label="Capacidad de mesas altas"
                     type="number"
-                    value={editing ? editConfig.highTablesCapacity : (config.highTablesCapacity || 0)}
+                    value={editConfig.highTablesCapacity || 0}
                     onChange={(e) => updateConfig('highTablesCapacity', parseInt(e.target.value))}
                     error={!!errors.highTablesCapacity}
                     helperText={errors.highTablesCapacity}
-                    InputProps={{ readOnly: !editing }}
                     inputProps={{ min: 0 }}
                   />
                 </Box>
@@ -354,9 +337,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     fullWidth
                     label="Número de mesas de terraza"
                     type="number"
-                    value={editing ? editConfig.terraceTables : (config.terraceTables || 0)}
+                    value={editConfig.terraceTables || 0}
                     onChange={(e) => updateConfig('terraceTables', parseInt(e.target.value))}
-                    InputProps={{ readOnly: !editing }}
                     inputProps={{ min: 0 }}
                   />
                 </Box>
@@ -365,11 +347,10 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     fullWidth
                     label="Capacidad de terraza"
                     type="number"
-                    value={editing ? editConfig.terraceCapacity : (config.terraceCapacity || 0)}
+                    value={editConfig.terraceCapacity || 0}
                     onChange={(e) => updateConfig('terraceCapacity', parseInt(e.target.value))}
                     error={!!errors.terraceCapacity}
                     helperText={errors.terraceCapacity}
-                    InputProps={{ readOnly: !editing }}
                     inputProps={{ min: 0 }}
                   />
                 </Box>
@@ -395,9 +376,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     fullWidth
                     label="Plazas en la barra"
                     type="number"
-                    value={editing ? editConfig.barSeats : (config.barSeats || 0)}
+                    value={editConfig.barSeats || 0}
                     onChange={(e) => updateConfig('barSeats', parseInt(e.target.value))}
-                    InputProps={{ readOnly: !editing }}
                     inputProps={{ min: 0 }}
                   />
                 </Box>
@@ -420,32 +400,31 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={editing ? Boolean(editConfig.requiresDeposit) : Boolean(config?.requiresDeposit)}
+                      checked={Boolean(editConfig.requiresDeposit)}
                       onChange={(e) => setEditConfig(prev => ({ ...prev, requiresDeposit: e.target.checked }))}
-                      disabled={!editing}
                     />
                   }
                   label="¿Requiere paga y señal?"
                   sx={{ mb: 2 }}
                 />
                 
-                {(editing ? Boolean(editConfig.requiresDeposit) : Boolean(config?.requiresDeposit)) && (
+                {Boolean(editConfig.requiresDeposit) && (
                   <Box sx={{ ml: 2 }}>
                     <FormControl component="fieldset" sx={{ mb: 2 }}>
                       <FormLabel component="legend">Tipo de paga y señal:</FormLabel>
                       <RadioGroup
-                        value={editing ? editConfig.depositType : (config?.depositType || 'FIXED_PER_RESERVATION')}
+                        value={editConfig.depositType || 'FIXED_PER_RESERVATION'}
                         onChange={(e) => setEditConfig(prev => ({ ...prev, depositType: e.target.value as 'FIXED_PER_RESERVATION' | 'PER_PERSON' }))}
-                        row={!editing}
+                        row
                       >
                         <FormControlLabel
                           value="FIXED_PER_RESERVATION"
-                          control={<Radio disabled={!editing} />}
+                          control={<Radio />}
                           label="Valor fijo por reserva"
                         />
                         <FormControlLabel
                           value="PER_PERSON"
-                          control={<Radio disabled={!editing} />}
+                          control={<Radio />}
                           label="Valor por persona"
                         />
                       </RadioGroup>
@@ -453,11 +432,10 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     
                     <TextField
                       fullWidth
-                      label={`Cantidad (€) ${(editing ? editConfig.depositType : (config?.depositType || 'FIXED_PER_RESERVATION')) === 'PER_PERSON' ? 'por persona' : 'por reserva'}`}
+                      label={`Cantidad (€) ${(editConfig.depositType || 'FIXED_PER_RESERVATION') === 'PER_PERSON' ? 'por persona' : 'por reserva'}`}
                       type="number"
-                      value={editing ? (editConfig.depositAmount || '') : (config?.depositAmount || '')}
+                      value={editConfig.depositAmount || ''}
                       onChange={(e) => setEditConfig(prev => ({ ...prev, depositAmount: parseFloat(e.target.value) || undefined }))}
-                      InputProps={{ readOnly: !editing }}
                       inputProps={{ min: 0, step: 0.01 }}
                       sx={{ maxWidth: 300 }}
                     />
@@ -475,9 +453,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={editing ? Boolean(editConfig.askReservationReason) : Boolean(config?.askReservationReason)}
+                        checked={Boolean(editConfig.askReservationReason)}
                         onChange={(e) => setEditConfig(prev => ({ ...prev, askReservationReason: e.target.checked }))}
-                        disabled={!editing}
                       />
                     }
                     label="¿Preguntar por el motivo de la reserva? (cumpleaños, aniversario, etc.)"
@@ -486,9 +463,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={editing ? Boolean(editConfig.askAllergies) : Boolean(config?.askAllergies)}
+                        checked={Boolean(editConfig.askAllergies)}
                         onChange={(e) => setEditConfig(prev => ({ ...prev, askAllergies: e.target.checked }))}
-                        disabled={!editing}
                       />
                     }
                     label="¿Preguntar por alergias o intolerancias?"
@@ -497,9 +473,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   <FormControlLabel
                     control={
                       <Switch
-                        checked={editing ? Boolean(editConfig.askFoodType) : Boolean(config?.askFoodType)}
+                        checked={Boolean(editConfig.askFoodType)}
                         onChange={(e) => setEditConfig(prev => ({ ...prev, askFoodType: e.target.checked }))}
-                        disabled={!editing}
                       />
                     }
                     label="¿Preguntar por el tipo de comida? (menú, carta, degustación, etc.)"
@@ -508,7 +483,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
               </Box>
             </Box>
 
-            {editing && (
+            {/* Always show save/cancel buttons - removed editing condition */}
               <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
                 <Button
                   variant="outlined"
@@ -527,7 +502,6 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   {loading ? 'Guardando...' : 'Guardar cambios'}
                 </Button>
               </Box>
-            )}
           </Paper>
         </>
       )}
