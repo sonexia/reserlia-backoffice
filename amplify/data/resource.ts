@@ -9,6 +9,7 @@ specifies that any user authenticated via an API key can "create", "read",
 const schema = a.schema({
   Reservation: a
     .model({
+      owner: a.string(), // Campo owner para identificar al usuario propietario (se llena automáticamente)
       datetime: a.datetime().required(), // Fecha y hora de la reserva (requerido)
       customerName: a.string().required(), // Nombre del cliente (requerido)
       partySize: a.integer().required(), // Número de personas (requerido)
@@ -16,10 +17,14 @@ const schema = a.schema({
       location: a.string(), // Ubicación de la reserva (salón, terraza, barra, etc.)
       notes: a.string(),   // Observaciones adicionales (opcional por defecto)
     })
-    .authorization((allow) => [allow.owner()]),
+    .authorization((allow) => [allow.owner()])
+    .secondaryIndexes((index) => [
+      index("owner").sortKeys(["datetime"]).name("ByOwnerAndDatetime"), // Índice GSI para consultas eficientes por owner
+    ]),
   
   RestaurantConfig: a
     .model({
+      owner: a.string(), // Campo owner para identificar al usuario propietario (se llena automáticamente)
       salonTables: a.integer().required(), // Número de mesas de salón
       salonCapacity: a.integer().required(), // Capacidad total de mesas de salón
       highTables: a.integer().default(0), // Mesas altas (opcional)
@@ -38,7 +43,10 @@ const schema = a.schema({
       askAllergies: a.boolean().default(false), // ¿Preguntar por alergias?
       askFoodType: a.boolean().default(false), // ¿Preguntar por tipo de comida?
     })
-    .authorization((allow) => [allow.owner()]),
+    .authorization((allow) => [allow.owner()])
+    .secondaryIndexes((index) => [
+      index("owner").name("ByOwner"), // Índice GSI para consultas eficientes por owner
+    ]),
 });
 
 export type Schema = ClientSchema<typeof schema>;
