@@ -1,4 +1,7 @@
 version: 1
+env:
+  runtime-versions:
+    nodejs: 20
 backend:
   phases:
     build:
