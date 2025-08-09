@@ -12,7 +12,6 @@ backend:
         - |
           find amplify/functions -maxdepth 2 -type f -name package.json \
             -exec bash -lc 'echo "Installing deps in $(dirname {})"; cd "$(dirname {})" && npm ci --omit=dev' \;
-  phases:
     build:
       commands:
         - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
