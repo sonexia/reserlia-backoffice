@@ -26,6 +26,11 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
     const method = event.requestContext?.http?.method;
     const rawPath = event.requestContext?.http?.path;
 
+    // CORS preflight: respond to OPTIONS with 204 and CORS headers
+    if (method === 'OPTIONS') {
+      return response(204, '');
+    }
+
     if (method === 'POST' && rawPath?.endsWith('/create')) {
       const body = (parseJson<{ subscriptionPriceId?: string; setupFeePriceId?: string; email?: string }>(event.body) || {});
 
@@ -121,9 +126,6 @@ function response(statusCode: number, body: unknown): APIGatewayProxyStructuredR
     statusCode,
     headers: {
       'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type,Authorization',
     },
     body: JSON.stringify(body),
   };
