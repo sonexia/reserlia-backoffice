@@ -1,0 +1,9 @@
+{
+  "name": "create-checkout",
+  "version": "1.0.0",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "stripe": "^16.6.0"
+  }
+}

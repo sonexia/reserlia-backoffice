@@ -46,6 +46,10 @@ export const useRestaurantConfig = () => {
           askReservationReason: restaurantConfig.askReservationReason !== null ? restaurantConfig.askReservationReason : undefined,
           askAllergies: restaurantConfig.askAllergies !== null ? restaurantConfig.askAllergies : undefined,
           askFoodType: restaurantConfig.askFoodType !== null ? restaurantConfig.askFoodType : undefined,
+          // Suscripción
+          subscriptionStatus: restaurantConfig.subscriptionStatus ?? undefined,
+          stripeCustomerId: restaurantConfig.stripeCustomerId ?? undefined,
+          stripeSubscriptionId: restaurantConfig.stripeSubscriptionId ?? undefined,
         });
       } else {
         setConfig(null);
@@ -78,11 +82,15 @@ export const useRestaurantConfig = () => {
           barSeats: newConfig.barSeats !== undefined ? newConfig.barSeats : null,
           // Configuración avanzada
           requiresDeposit: newConfig.requiresDeposit !== undefined ? newConfig.requiresDeposit : null,
-          depositType: newConfig.depositType || null,
+          depositType: newConfig.depositType !== undefined ? newConfig.depositType : null,
           depositAmount: newConfig.depositAmount !== undefined ? newConfig.depositAmount : null,
           askReservationReason: newConfig.askReservationReason !== undefined ? newConfig.askReservationReason : null,
           askAllergies: newConfig.askAllergies !== undefined ? newConfig.askAllergies : null,
           askFoodType: newConfig.askFoodType !== undefined ? newConfig.askFoodType : null,
+          // Suscripción
+          subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
+          stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,
+          stripeSubscriptionId: newConfig.stripeSubscriptionId !== undefined ? newConfig.stripeSubscriptionId : null,
         };
 
         const { data } = await client.models.RestaurantConfig.update(updateData);
@@ -104,6 +112,10 @@ export const useRestaurantConfig = () => {
             askReservationReason: data.askReservationReason || false,
             askAllergies: data.askAllergies || false,
             askFoodType: data.askFoodType || false,
+            // Suscripción
+            subscriptionStatus: data.subscriptionStatus || 'none',
+            stripeCustomerId: data.stripeCustomerId || undefined,
+            stripeSubscriptionId: data.stripeSubscriptionId || undefined,
           });
           toast.success('Configuración actualizada correctamente');
         }
@@ -125,6 +137,10 @@ export const useRestaurantConfig = () => {
           askReservationReason: newConfig.askReservationReason !== undefined ? newConfig.askReservationReason : null,
           askAllergies: newConfig.askAllergies !== undefined ? newConfig.askAllergies : null,
           askFoodType: newConfig.askFoodType !== undefined ? newConfig.askFoodType : null,
+          // Suscripción
+          subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
+          stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,
+          stripeSubscriptionId: newConfig.stripeSubscriptionId !== undefined ? newConfig.stripeSubscriptionId : null,
         };
 
         const { data } = await client.models.RestaurantConfig.create(createData);

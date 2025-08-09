@@ -1,5 +1,6 @@
 import { useAuthenticator } from '@aws-amplify/ui-react';
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, AppBar, Toolbar, Box, Button, Container, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
 import { Settings, MoreVert, Logout } from '@mui/icons-material';
@@ -19,6 +20,8 @@ const client = generateClient<Schema>();
 
 function App() {
   const { signOut } = useAuthenticator();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [reservations, setReservations] = useState<Array<Schema["Reservation"]["type"]>>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Schema["Reservation"]["type"] | null>(null);
@@ -37,6 +40,18 @@ function App() {
       next: (data) => setReservations([...data.items]),
     });
   }, []);
+
+  // Gating: si la suscripción no está activa, forzar /payment (excepto cuando ya estamos en rutas de pago)
+  useEffect(() => {
+    // Si estamos en el flujo de primer setup, este componente devuelve el wizard y no llega aquí
+    if (!config) return; // aún cargando o sin config
+    const status = config.subscriptionStatus;
+    const path = location.pathname;
+    const isOnPaymentRoute = path.startsWith('/payment');
+    if (status !== 'active' && !isOnPaymentRoute) {
+      navigate('/payment');
+    }
+  }, [config, location.pathname, navigate]);
 
   async function handleSave(input: Partial<Schema["Reservation"]["type"]>) {
     try {
@@ -85,6 +100,10 @@ function App() {
   // Restaurant configuration handlers
   const handleFirstTimeSetup = async (configData: Omit<RestaurantConfig, 'id'>) => {
     const success = await saveConfig(configData);
+    if (success) {
+      // Redirigir a la pantalla de pago para crear la suscripción
+      navigate('/payment');
+    }
     return success;
   };
 

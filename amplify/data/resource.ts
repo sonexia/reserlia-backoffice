@@ -42,6 +42,11 @@ const schema = a.schema({
       askReservationReason: a.boolean().default(false), // ¿Preguntar motivo de reserva?
       askAllergies: a.boolean().default(false), // ¿Preguntar por alergias?
       askFoodType: a.boolean().default(false), // ¿Preguntar por tipo de comida?
+
+      // Suscripción Stripe
+      subscriptionStatus: a.enum(['none', 'active', 'past_due', 'canceled']),
+      stripeCustomerId: a.string(),
+      stripeSubscriptionId: a.string(),
     })
     .authorization((allow) => [allow.owner()])
     .secondaryIndexes((index) => [

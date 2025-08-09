@@ -17,9 +17,12 @@ export default function ReservationTable({ reservations, onEdit, onDelete }: Res
   const columns = useMemo<MRT_ColumnDef<Schema["Reservation"]["type"]>[]>(
     () => [
       {
-        accessorKey: "datetime",
+        // Material React Table expects a Date object for date filters with 'between'.
+        // We convert the stored ISO string (or number) into a Date here.
+        accessorFn: (row) => new Date((row as Schema["Reservation"]["type"]).datetime as unknown as string),
+        id: "datetime",
         header: "Fecha y hora",
-        Cell: ({ cell }) => new Date(cell.getValue<number>()).toLocaleString(),
+        Cell: ({ cell }) => (cell.getValue<Date>()).toLocaleString(),
         filterVariant: "date",
         filterFn: "between",
         size: 180,
