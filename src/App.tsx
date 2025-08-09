@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, AppBar, Toolbar, Box, Button, Container, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
-import { Settings, MoreVert, Logout } from '@mui/icons-material';
+import { Settings, MoreVert, Logout, CreditCard } from '@mui/icons-material';
 import ReservationFormModal from "./components/ReservationFormModal";
 import ReservationTable from "./components/ReservationTable";
 import RestaurantSetup from "./components/RestaurantSetup";
@@ -17,6 +17,7 @@ import { reserliaTheme } from './theme/reserliaTheme';
 import './App.css';
 
 const client = generateClient<Schema>();
+const BILLING_ENDPOINT = (import.meta.env.VITE_CHECKOUT_ENDPOINT as string) || 'http://localhost:8787/createCheckout';
 
 function App() {
   const { signOut } = useAuthenticator();
@@ -129,6 +130,31 @@ function App() {
     handleMenuClose();
   };
 
+  const handleOpenBillingPortal = async () => {
+    try {
+      handleMenuClose();
+      const base = BILLING_ENDPOINT.replace(/\/$/, '');
+      const res = await fetch(`${base}/portal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ returnUrl: window.location.origin }),
+      });
+      if (!res.ok) {
+        const t = await res.text();
+        throw new Error(t || 'No se pudo abrir el portal de facturación');
+      }
+      const data: { url?: string } = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      throw new Error('Respuesta inesperada del backend');
+    } catch (e) {
+      console.error('Billing portal error', e);
+      toast.error('No se pudo abrir el portal de facturación');
+    }
+  };
+
   // Filter reservations based on current filter
   const filteredReservations = useMemo(() => {
     if (reservationFilter === 'all') {
@@ -220,6 +246,12 @@ function App() {
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 className="reserlia-menu"
               >
+                <MenuItem onClick={handleOpenBillingPortal}>
+                  <ListItemIcon>
+                    <CreditCard fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Facturación</ListItemText>
+                </MenuItem>
                 <MenuItem onClick={handleSettingsClick}>
                   <ListItemIcon>
                     <Settings fontSize="small" />

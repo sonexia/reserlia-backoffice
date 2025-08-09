@@ -81,6 +81,12 @@ app.post('/createCheckout/create', async (req, res) => {
   res.status(result.statusCode || 200).set(result.headers || {}).send(result.body || '');
 });
 
+app.post('/createCheckout/portal', async (req, res) => {
+  const event = buildEvent(req, '/createCheckout/portal');
+  const result = await handler(event);
+  res.status(result.statusCode || 200).set(result.headers || {}).send(result.body || '');
+});
+
 app.get('/createCheckout/confirm', async (req, res) => {
   const event = buildEvent(req, '/createCheckout/confirm');
   const result = await handler(event);

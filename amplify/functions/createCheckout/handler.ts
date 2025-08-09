@@ -3,12 +3,14 @@ import Stripe from 'stripe';
 // Handler supports two operations:
 // - POST /create: creates a Stripe Checkout Session (mode=subscription) with a one-time setup fee on first invoice
 // - GET /confirm?session_id=...: fetches the Checkout Session and returns subscription + customer info
+// - POST /portal: creates a Stripe Billing Portal session for the authenticated customer
 
 const stripeSecretKey = process.env.STRIPE_SECRET_KEY as string;
 const subscriptionPriceId = process.env.STRIPE_SUBSCRIPTION_PRICE_ID as string; // recurring price
 const setupFeePriceId = process.env.STRIPE_SETUP_FEE_PRICE_ID as string; // one-time price
 const successUrl = process.env.STRIPE_SUCCESS_URL as string; // e.g. https://app.example.com/payment/success?session_id={CHECKOUT_SESSION_ID}
 const cancelUrl = process.env.STRIPE_CANCEL_URL as string; // e.g. https://app.example.com/payment/cancel
+const billingPortalReturnUrl = process.env.STRIPE_BILLING_PORTAL_RETURN_URL as string | undefined; // optional override
 
 if (!stripeSecretKey) {
   throw new Error('Missing STRIPE_SECRET_KEY');
@@ -82,6 +84,44 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
 
       const session = await stripe.checkout.sessions.create(params);
       return response(200, { url: session.url, id: session.id });
+    }
+
+    if (method === 'POST' && rawPath?.endsWith('/portal')) {
+      const body = (parseJson<{ email?: string; returnUrl?: string }>(event.body) || {});
+      const claims = (event.requestContext as unknown as { authorizer?: JwtAuthorizer }).authorizer?.jwt?.claims;
+      const customerEmail = body.email || claims?.email;
+      const userSub = claims?.sub;
+
+      // Derive a safe return URL, in priority order: body, env, Origin header, successUrl origin
+      const originHeader = (event.headers?.origin || (event.headers as Record<string, string | undefined>)?.Origin);
+      let defaultOrigin: string | undefined;
+      try {
+        defaultOrigin = successUrl ? new URL(successUrl).origin : undefined;
+      } catch {
+        defaultOrigin = undefined;
+      }
+      const returnUrl = body.returnUrl || billingPortalReturnUrl || originHeader || defaultOrigin;
+      if (!returnUrl) return response(500, { message: 'Missing return URL for billing portal' });
+
+      // Create or reuse customer by email when available; otherwise create a placeholder customer
+      let customerId: string | undefined;
+      if (customerEmail) {
+        const existing = await stripe.customers.list({ email: customerEmail, limit: 1 });
+        if (existing.data.length) customerId = existing.data[0].id;
+      }
+      if (!customerId) {
+        const created = await stripe.customers.create({
+          email: customerEmail,
+          metadata: userSub ? { cognito_sub: String(userSub) } : undefined,
+        });
+        customerId = created.id;
+      }
+
+      const portal = await stripe.billingPortal.sessions.create({
+        customer: customerId,
+        return_url: returnUrl,
+      });
+      return response(200, { url: portal.url, id: portal.id });
     }
 
     if (method === 'GET' && rawPath?.endsWith('/confirm')) {
