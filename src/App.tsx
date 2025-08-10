@@ -62,6 +62,7 @@ function App() {
           id: editingReservation.id,
           datetime: input.datetime,
           customerName: input.customerName,
+          phoneNumber: input.phoneNumber,
           partySize: input.partySize,
           tableNumber: input.tableNumber,
           notes: input.notes,

@@ -32,6 +32,10 @@ export default function ReservationTable({ reservations, onEdit, onDelete }: Res
         header: "Cliente",
       },
       {
+        accessorKey: "phoneNumber",
+        header: "Teléfono",
+      },
+      {
         accessorKey: "partySize",
         header: "Nº Personas",
       },

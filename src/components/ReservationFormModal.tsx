@@ -37,6 +37,7 @@ export default function ReservationFormModal({
   );
 
   const [customerName, setCustomerName] = useState(reservation?.customerName || "");
+  const [phoneNumber, setPhoneNumber] = useState(reservation?.phoneNumber || "");
   const [partySize, setPartySize] = useState<number>(
     reservation?.partySize || 2
   );
@@ -51,6 +52,7 @@ export default function ReservationFormModal({
     if (reservation) {
       setSelectedDate(dayjs(reservation.datetime));
       setCustomerName(reservation.customerName ?? "");
+      setPhoneNumber(reservation.phoneNumber ?? "");
       setPartySize(reservation.partySize ?? 1);
       setTableNumber(reservation.tableNumber ?? "");
       setLocation(reservation.location ?? "");
@@ -58,6 +60,7 @@ export default function ReservationFormModal({
     } else {
       setSelectedDate(dayjs());
       setCustomerName("");
+      setPhoneNumber("");
       setPartySize(1);
       setTableNumber("");
       setLocation("");
@@ -79,7 +82,7 @@ export default function ReservationFormModal({
     try {
       // Convertir a formato ISO8601 completo (lo que espera AWS AppSync/DynamoDB)
       const isoDateTime = selectedDate.toISOString();
-      onSave({ datetime: isoDateTime, customerName, partySize, tableNumber, location, notes });
+      onSave({ datetime: isoDateTime, customerName, phoneNumber, partySize, tableNumber, location, notes });
     } catch (err) {
       console.error("Error al formatear la fecha:", err);
       setError("Formato de fecha incorrecto. Por favor verifica.");
@@ -228,6 +231,16 @@ export default function ReservationFormModal({
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               required
+              variant="outlined"
+              sx={{ mb: 3 }}
+            />
+
+            <TextField
+              fullWidth
+              label="Teléfono"
+              placeholder="Ej: +34 600 123 456"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
               variant="outlined"
               sx={{ mb: 3 }}
             />

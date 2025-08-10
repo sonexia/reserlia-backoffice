@@ -6,12 +6,14 @@ adding a new "isDone" field as a boolean. The authorization rule below
 specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "Todo" records.
 =========================================================================*/
+// Touch: trigger sandbox re-synth after adding phoneNumber to Reservation
 const schema = a.schema({
   Reservation: a
     .model({
       owner: a.string(), // Campo owner para identificar al usuario propietario (se llena automáticamente)
       datetime: a.datetime().required(), // Fecha y hora de la reserva (requerido)
       customerName: a.string().required(), // Nombre del cliente (requerido)
+      phoneNumber: a.string(), // Teléfono desde el que ha llamado el cliente (opcional)
       partySize: a.integer().required(), // Número de personas (requerido)
       tableNumber: a.string(), // Mesa asignada (opcional por defecto)
       location: a.string(), // Ubicación de la reserva (salón, terraza, barra, etc.)
