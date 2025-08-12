@@ -46,6 +46,11 @@ export const useRestaurantConfig = () => {
           askReservationReason: restaurantConfig.askReservationReason !== null ? restaurantConfig.askReservationReason : undefined,
           askAllergies: restaurantConfig.askAllergies !== null ? restaurantConfig.askAllergies : undefined,
           askFoodType: restaurantConfig.askFoodType !== null ? restaurantConfig.askFoodType : undefined,
+          // Horarios y configuración del bot
+          reservationSchedule: restaurantConfig.reservationSchedule ? JSON.parse(restaurantConfig.reservationSchedule as string) : undefined,
+          callRedirectionSchedule: restaurantConfig.callRedirectionSchedule ? JSON.parse(restaurantConfig.callRedirectionSchedule as string) : undefined,
+          maxDinersPerBot: restaurantConfig.maxDinersPerBot !== null ? restaurantConfig.maxDinersPerBot : undefined,
+          reservationDuration: restaurantConfig.reservationDuration !== null ? restaurantConfig.reservationDuration : undefined,
           // Suscripción
           subscriptionStatus: restaurantConfig.subscriptionStatus ?? undefined,
           stripeCustomerId: restaurantConfig.stripeCustomerId ?? undefined,
@@ -87,6 +92,11 @@ export const useRestaurantConfig = () => {
           askReservationReason: newConfig.askReservationReason !== undefined ? newConfig.askReservationReason : null,
           askAllergies: newConfig.askAllergies !== undefined ? newConfig.askAllergies : null,
           askFoodType: newConfig.askFoodType !== undefined ? newConfig.askFoodType : null,
+          // Horarios y configuración del bot
+          reservationSchedule: newConfig.reservationSchedule ? JSON.stringify(newConfig.reservationSchedule) : null,
+          callRedirectionSchedule: newConfig.callRedirectionSchedule ? JSON.stringify(newConfig.callRedirectionSchedule) : null,
+          maxDinersPerBot: newConfig.maxDinersPerBot !== undefined ? newConfig.maxDinersPerBot : null,
+          reservationDuration: newConfig.reservationDuration !== undefined ? newConfig.reservationDuration : null,
           // Suscripción
           subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
           stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,
@@ -112,6 +122,11 @@ export const useRestaurantConfig = () => {
             askReservationReason: data.askReservationReason || false,
             askAllergies: data.askAllergies || false,
             askFoodType: data.askFoodType || false,
+            // Horarios y configuración del bot
+            reservationSchedule: data.reservationSchedule ? JSON.parse(data.reservationSchedule as string) : undefined,
+            callRedirectionSchedule: data.callRedirectionSchedule ? JSON.parse(data.callRedirectionSchedule as string) : undefined,
+            maxDinersPerBot: data.maxDinersPerBot || 6,
+            reservationDuration: data.reservationDuration || 120,
             // Suscripción
             subscriptionStatus: data.subscriptionStatus || 'none',
             stripeCustomerId: data.stripeCustomerId || undefined,
@@ -137,6 +152,11 @@ export const useRestaurantConfig = () => {
           askReservationReason: newConfig.askReservationReason !== undefined ? newConfig.askReservationReason : null,
           askAllergies: newConfig.askAllergies !== undefined ? newConfig.askAllergies : null,
           askFoodType: newConfig.askFoodType !== undefined ? newConfig.askFoodType : null,
+          // Horarios y configuración del bot
+          reservationSchedule: newConfig.reservationSchedule ? JSON.stringify(newConfig.reservationSchedule) : null,
+          callRedirectionSchedule: newConfig.callRedirectionSchedule ? JSON.stringify(newConfig.callRedirectionSchedule) : null,
+          maxDinersPerBot: newConfig.maxDinersPerBot !== undefined ? newConfig.maxDinersPerBot : null,
+          reservationDuration: newConfig.reservationDuration !== undefined ? newConfig.reservationDuration : null,
           // Suscripción
           subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
           stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,

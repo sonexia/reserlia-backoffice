@@ -17,12 +17,27 @@ import {
   Radio,
   FormLabel,
   Alert,
-  CircularProgress
+  CircularProgress,
+  Card,
+  CardContent,
+  Tooltip
 } from '@mui/material';
-import { Restaurant, TableBar, Settings } from '@mui/icons-material';
+import { 
+  Restaurant, 
+  TableBar, 
+  Settings, 
+  Schedule, 
+  Phone, 
+  Group, 
+  Timer, 
+  InfoOutlined 
+} from '@mui/icons-material';
 
 // Importamos la interfaz RestaurantConfig del hook para mantener consistencia
 import { RestaurantConfig } from '../hooks/useRestaurantConfig';
+import SimplifiedScheduleConfig, { SimplifiedSchedule } from './SimplifiedScheduleConfig';
+
+// Nota: Los tipos para horarios simplificados ahora se importan desde SimplifiedScheduleConfig
 
 interface RestaurantSetupProps {
   onComplete: (config: Omit<RestaurantConfig, 'id'>) => void;
@@ -31,6 +46,23 @@ interface RestaurantSetupProps {
 
 const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading = false }) => {
   const [activeStep, setActiveStep] = useState(0);
+  
+  // Helper function to create default simplified schedule
+  const createDefaultSchedule = (): SimplifiedSchedule => ({
+    weekdays: { enabled: true, ranges: [{ start: '09:00', end: '22:00' }] },
+    saturday: { enabled: true, ranges: [{ start: '09:00', end: '22:00' }] },
+    sunday: { enabled: false, ranges: [] },
+    enabledDays: {
+      monday: true,
+      tuesday: true,
+      wednesday: true,
+      thursday: true,
+      friday: true,
+      saturday: true,
+      sunday: false
+    }
+  });
+
   // Mantenemos los valores del formulario como strings para permitir campos vacíos durante la edición
   const [inputValues, setInputValues] = useState({
     salonTables: '0',
@@ -41,7 +73,13 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     terraceCapacity: '0',
     barSeats: '0',
     depositAmount: '',
+    maxDinersPerBot: '6',
+    reservationDuration: '120',
   });
+
+  // Schedule states
+  const [reservationSchedule, setReservationSchedule] = useState<SimplifiedSchedule>(createDefaultSchedule());
+  const [callRedirectionSchedule, setCallRedirectionSchedule] = useState<SimplifiedSchedule>(createDefaultSchedule());
 
   // Estado real del config con valores numéricos
   const [config, setConfig] = useState<Omit<RestaurantConfig, 'id'>>({
@@ -59,9 +97,16 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     askReservationReason: false,
     askAllergies: false,
     askFoodType: false,
+    // Nuevos campos
+    reservationSchedule: createDefaultSchedule(),
+    callRedirectionSchedule: createDefaultSchedule(),
+    maxDinersPerBot: 6,
+    reservationDuration: 120,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Nota: Las funciones helper de manipulación de horarios ahora se manejan dentro del SimplifiedScheduleConfig
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
@@ -78,7 +123,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
           newErrors.salonCapacity = 'La capacidad no puede ser menor al número de mesas';
         }
         break;
-      case 1: // Mesas altas (opcional)
+      case 1: // Mesas altas y terraza (opcional)
         if (config.highTables && config.highTables > 0) {
           if (!config.highTablesCapacity || config.highTablesCapacity <= 0) {
             newErrors.highTablesCapacity = 'Debe especificar la capacidad de las mesas altas';
@@ -87,8 +132,6 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
             newErrors.highTablesCapacity = 'La capacidad no puede ser menor al número de mesas altas';
           }
         }
-        break;
-      case 2: // Terraza (opcional)
         if (config.terraceTables && config.terraceTables > 0) {
           if (!config.terraceCapacity || config.terraceCapacity <= 0) {
             newErrors.terraceCapacity = 'Debe especificar la capacidad de la terraza';
@@ -96,6 +139,48 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
           if (config.terraceCapacity && config.terraceCapacity < config.terraceTables) {
             newErrors.terraceCapacity = 'La capacidad no puede ser menor al número de mesas de terraza';
           }
+        }
+        break;
+      case 2: { // Horarios de reservas
+        // Validar que al menos un grupo tenga horarios configurados y días habilitados
+        const hasReservationSchedule = (
+          (reservationSchedule.weekdays.enabled && reservationSchedule.weekdays.ranges.length > 0 && 
+           (reservationSchedule.enabledDays.monday || reservationSchedule.enabledDays.tuesday || 
+            reservationSchedule.enabledDays.wednesday || reservationSchedule.enabledDays.thursday || 
+            reservationSchedule.enabledDays.friday)) ||
+          (reservationSchedule.saturday.enabled && reservationSchedule.saturday.ranges.length > 0 && 
+           reservationSchedule.enabledDays.saturday) ||
+          (reservationSchedule.sunday.enabled && reservationSchedule.sunday.ranges.length > 0 && 
+           reservationSchedule.enabledDays.sunday)
+        );
+        if (!hasReservationSchedule) {
+          newErrors.reservationSchedule = 'Debe configurar horarios de reservas para al menos un día';
+        }
+        break;
+      }
+      case 3: { // Horarios de redirección de llamadas
+        // Validar que al menos un grupo tenga horarios configurados y días habilitados
+        const hasCallSchedule = (
+          (callRedirectionSchedule.weekdays.enabled && callRedirectionSchedule.weekdays.ranges.length > 0 && 
+           (callRedirectionSchedule.enabledDays.monday || callRedirectionSchedule.enabledDays.tuesday || 
+            callRedirectionSchedule.enabledDays.wednesday || callRedirectionSchedule.enabledDays.thursday || 
+            callRedirectionSchedule.enabledDays.friday)) ||
+          (callRedirectionSchedule.saturday.enabled && callRedirectionSchedule.saturday.ranges.length > 0 && 
+           callRedirectionSchedule.enabledDays.saturday) ||
+          (callRedirectionSchedule.sunday.enabled && callRedirectionSchedule.sunday.ranges.length > 0 && 
+           callRedirectionSchedule.enabledDays.sunday)
+        );
+        if (!hasCallSchedule) {
+          newErrors.callRedirectionSchedule = 'Debe configurar horarios de redirección para al menos un día';
+        }
+        break;
+      }
+      case 4: // Configuración del bot
+        if (!config.maxDinersPerBot || config.maxDinersPerBot <= 0) {
+          newErrors.maxDinersPerBot = 'El número máximo de comensales debe ser mayor a 0';
+        }
+        if (!config.reservationDuration || config.reservationDuration <= 0) {
+          newErrors.reservationDuration = 'El tiempo de reserva debe ser mayor a 0';
         }
         break;
     }
@@ -116,7 +201,15 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
 
   const handleComplete = () => {
     if (validateStep(activeStep)) {
-      onComplete(config);
+      // Actualizar config con los horarios antes de completar
+      const finalConfig = {
+        ...config,
+        reservationSchedule,
+        callRedirectionSchedule,
+        maxDinersPerBot: parseInt(inputValues.maxDinersPerBot) || 6,
+        reservationDuration: parseInt(inputValues.reservationDuration) || 120,
+      };
+      onComplete(finalConfig);
     }
   };
 
@@ -153,19 +246,24 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
       icon: <Restaurant />
     },
     {
-      label: 'Mesas altas (opcional)',
-      description: 'Configure las mesas altas si las tiene',
+      label: 'Otras zonas',
+      description: 'Configure mesas altas, terraza y barra (opcional)',
       icon: <TableBar />
     },
     {
-      label: 'Terraza (opcional)',
-      description: 'Configure su terraza si tiene una',
-      icon: <Restaurant />
+      label: 'Horarios de reservas',
+      description: 'Configure cuándo acepta reservas',
+      icon: <Schedule />
     },
     {
-      label: 'Barra (opcional)',
-      description: 'Configure la barra si tiene una',
-      icon: <TableBar />
+      label: 'Redirección de llamadas',
+      description: 'Configure cuándo redirigir llamadas a personal',
+      icon: <Phone />
+    },
+    {
+      label: 'Configuración del bot',
+      description: 'Configure límites y tiempos del bot',
+      icon: <Group />
     },
     {
       label: 'Configuración avanzada',
@@ -221,6 +319,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
               <StepContent sx={{ py: { xs: 1, sm: 1.5 } }}>
                 <Typography sx={{ mb: { xs: 1, sm: 2 } }}>{step.description}</Typography>
                 
+                {/* Paso 1: Mesas de salón */}
                 {index === 0 && (
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
                     <Box sx={{ width: '100%' }}>
@@ -250,81 +349,174 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                   </Stack>
                 )}
 
+                {/* Paso 2: Otras zonas (mesas altas, terraza, barra) */}
                 {index === 1 && (
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
-                    <Box sx={{ width: '100%' }}>
-                      <TextField
-                        fullWidth
-                        label="Número de mesas altas"
-                        type="number"
-                        value={inputValues.highTables}
-                        onChange={(e) => handleInputChange('highTables', e.target.value)}
-                        helperText="Deje en 0 si no tiene mesas altas"
-                        inputProps={{ min: 0 }}
-                      />
-                    </Box>
-                    <Box sx={{ width: '100%' }}>
-                      <TextField
-                        fullWidth
-                        label="Capacidad de mesas altas"
-                        type="number"
-                        value={inputValues.highTablesCapacity}
-                        onChange={(e) => handleInputChange('highTablesCapacity', e.target.value)}
-                        error={!!errors.highTablesCapacity}
-                        helperText={errors.highTablesCapacity || "Total de personas en mesas altas"}
-                        inputProps={{ min: 0 }}
-                        disabled={!config.highTables || config.highTables === 0}
-                      />
-                    </Box>
+                  <Stack spacing={3}>
+                    {/* Mesas altas */}
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TableBar />
+                          Mesas altas
+                        </Typography>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                          <TextField
+                            fullWidth
+                            label="Número de mesas altas"
+                            type="number"
+                            value={inputValues.highTables}
+                            onChange={(e) => handleInputChange('highTables', e.target.value)}
+                            helperText="Deje en 0 si no tiene mesas altas"
+                            inputProps={{ min: 0 }}
+                          />
+                          <TextField
+                            fullWidth
+                            label="Capacidad de mesas altas"
+                            type="number"
+                            value={inputValues.highTablesCapacity}
+                            onChange={(e) => handleInputChange('highTablesCapacity', e.target.value)}
+                            error={!!errors.highTablesCapacity}
+                            helperText={errors.highTablesCapacity || "Total de personas en mesas altas"}
+                            inputProps={{ min: 0 }}
+                            disabled={!config.highTables || config.highTables === 0}
+                          />
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Terraza */}
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Restaurant />
+                          Terraza
+                        </Typography>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                          <TextField
+                            fullWidth
+                            label="Número de mesas de terraza"
+                            type="number"
+                            value={inputValues.terraceTables}
+                            onChange={(e) => handleInputChange('terraceTables', e.target.value)}
+                            helperText="Deje en 0 si no tiene terraza"
+                            inputProps={{ min: 0 }}
+                          />
+                          <TextField
+                            fullWidth
+                            label="Capacidad de terraza"
+                            type="number"
+                            value={inputValues.terraceCapacity}
+                            onChange={(e) => handleInputChange('terraceCapacity', e.target.value)}
+                            error={!!errors.terraceCapacity}
+                            helperText={errors.terraceCapacity || "Total de personas en la terraza"}
+                            inputProps={{ min: 0 }}
+                            disabled={!config.terraceTables || config.terraceTables === 0}
+                          />
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                    
+                    {/* Barra */}
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <TableBar />
+                          Barra
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          label="Plazas en la barra"
+                          type="number"
+                          value={inputValues.barSeats}
+                          onChange={(e) => handleInputChange('barSeats', e.target.value)}
+                          helperText="Deje en 0 si no tiene barra"
+                          inputProps={{ min: 0 }}
+                          sx={{ maxWidth: { sm: '50%' } }}
+                        />
+                      </CardContent>
+                    </Card>
                   </Stack>
                 )}
 
+                {/* Paso 3: Horarios de reservas */}
                 {index === 2 && (
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
-                    <Box sx={{ width: '100%' }}>
-                      <TextField
-                        fullWidth
-                        label="Número de mesas de terraza"
-                        type="number"
-                        value={inputValues.terraceTables}
-                        onChange={(e) => handleInputChange('terraceTables', e.target.value)}
-                        helperText="Deje en 0 si no tiene terraza"
-                        inputProps={{ min: 0 }}
-                      />
-                    </Box>
-                    <Box sx={{ width: '100%' }}>
-                      <TextField
-                        fullWidth
-                        label="Capacidad de terraza"
-                        type="number"
-                        value={inputValues.terraceCapacity}
-                        onChange={(e) => handleInputChange('terraceCapacity', e.target.value)}
-                        error={!!errors.terraceCapacity}
-                        helperText={errors.terraceCapacity || "Total de personas en la terraza"}
-                        inputProps={{ min: 0 }}
-                        disabled={!config.terraceTables || config.terraceTables === 0}
-                      />
-                    </Box>
-                  </Stack>
+                  <SimplifiedScheduleConfig
+                    title="Horarios de Reservas"
+                    description="Configure los días y horarios en los que acepta reservas. El bot solo gestionará reservas durante estos horarios."
+                    schedule={reservationSchedule}
+                    onChange={setReservationSchedule}
+                    error={errors.reservationSchedule}
+                  />
                 )}
 
+                {/* Paso 4: Horarios de redirección de llamadas */}
                 {index === 3 && (
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
-                    <Box sx={{ width: '100%' }}>
-                      <TextField
-                        fullWidth
-                        label="Plazas en la barra"
-                        type="number"
-                        value={inputValues.barSeats}
-                        onChange={(e) => handleInputChange('barSeats', e.target.value)}
-                        helperText="Deje en 0 si no tiene barra"
-                        inputProps={{ min: 0 }}
-                      />
-                    </Box>
+                  <SimplifiedScheduleConfig
+                    title="Horarios de Redirección de Llamadas"
+                    description="Configure los horarios en los que las llamadas serán redirigidas a una persona responsable en lugar del bot."
+                    schedule={callRedirectionSchedule}
+                    onChange={setCallRedirectionSchedule}
+                    error={errors.callRedirectionSchedule}
+                  />
+                )}
+
+                {/* Paso 5: Configuración del bot */}
+                {index === 4 && (
+                  <Stack spacing={3}>
+                    <Alert severity="info">
+                      Configure los límites y tiempos del bot para gestionar las reservas de manera eficiente.
+                    </Alert>
+                    
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Group />
+                          Número máximo de comensales por bot
+                          <Tooltip title="El bot redirigirá las llamadas a personal cuando el número de comensales sea superior a este límite">
+                            <InfoOutlined fontSize="small" color="info" />
+                          </Tooltip>
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          label="Máximo de comensales que atenderá el bot"
+                          type="number"
+                          value={inputValues.maxDinersPerBot}
+                          onChange={(e) => handleInputChange('maxDinersPerBot', e.target.value)}
+                          error={!!errors.maxDinersPerBot}
+                          helperText={errors.maxDinersPerBot || "Si una reserva supera este número, se redirigirá a una persona responsable"}
+                          inputProps={{ min: 1, max: 20 }}
+                          sx={{ maxWidth: { sm: '50%' } }}
+                        />
+                      </CardContent>
+                    </Card>
+                    
+                    <Card variant="outlined">
+                      <CardContent>
+                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Timer />
+                          Tiempo de reserva
+                          <Tooltip title="Tiempo que el restaurante da a los comensales para comer. Necesario para saber cuándo puede entrar una nueva reserva en la misma mesa">
+                            <InfoOutlined fontSize="small" color="info" />
+                          </Tooltip>
+                        </Typography>
+                        <TextField
+                          fullWidth
+                          label="Tiempo de reserva (minutos)"
+                          type="number"
+                          value={inputValues.reservationDuration}
+                          onChange={(e) => handleInputChange('reservationDuration', e.target.value)}
+                          error={!!errors.reservationDuration}
+                          helperText={errors.reservationDuration || "Tiempo que dura una reserva para calcular disponibilidad de mesas"}
+                          inputProps={{ min: 30, max: 480, step: 15 }}
+                          sx={{ maxWidth: { sm: '50%' } }}
+                        />
+                      </CardContent>
+                    </Card>
                   </Stack>
                 )}
 
-                {index === 4 && (
+                {/* Paso 6: Configuración avanzada */}
+                {index === 5 && (
                   <Stack spacing={3} sx={{ width: '100%' }}>
                     {/* Configuración de paga y señal */}
                     <Box>

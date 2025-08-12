@@ -14,12 +14,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControl,
-  FormControlLabel,
-  Switch,
-  RadioGroup,
-  Radio,
-  FormLabel
+
 } from '@mui/material';
 import {
   Restaurant,
@@ -48,22 +43,15 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
   onClose
 }) => {
   // Removed editing state - fields are always editable now
-  // Usamos Omit<RestaurantConfig, 'id'> para omitir el id en el estado inicial
-  const [editConfig, setEditConfig] = useState<Omit<RestaurantConfig, 'id'>>({
+  // Solo configuración básica: mesas, capacidades y zonas
+  const [editConfig, setEditConfig] = useState({
     salonTables: 0,
     salonCapacity: 0,
     highTables: 0,
     highTablesCapacity: 0,
     terraceTables: 0,
     terraceCapacity: 0,
-    barSeats: 0,
-    // Configuración avanzada
-    requiresDeposit: false,
-    depositType: 'FIXED_PER_RESERVATION',
-    depositAmount: undefined,
-    askReservationReason: false,
-    askAllergies: false,
-    askFoodType: false,
+    barSeats: 0
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -71,19 +59,13 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
   useEffect(() => {
     if (config) {
       setEditConfig({
-        ...config,
+        salonTables: config.salonTables,
+        salonCapacity: config.salonCapacity,
         highTables: config.highTables || 0,
         highTablesCapacity: config.highTablesCapacity || 0,
         terraceTables: config.terraceTables || 0,
         terraceCapacity: config.terraceCapacity || 0,
-        barSeats: config.barSeats || 0,
-        // Configuración avanzada
-        requiresDeposit: config.requiresDeposit || false,
-        depositType: config.depositType || 'FIXED_PER_RESERVATION',
-        depositAmount: config.depositAmount || undefined,
-        askReservationReason: config.askReservationReason || false,
-        askAllergies: config.askAllergies || false,
-        askFoodType: config.askFoodType || false,
+        barSeats: config.barSeats || 0
       });
     }
   }, [config]);
@@ -131,12 +113,16 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
 
   const handleCancel = () => {
     if (config) {
-      // Reestablecer el formulario al estado actual de la configuración
-      // Usamos spread para extraer todos los campos excepto el id
-      // El prefijo _ indica a ESLint que esta variable se ignora intencionalmente
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { id: _, ...configWithoutId } = config;
-      setEditConfig(configWithoutId);
+      // Resetear solo los campos básicos
+      setEditConfig({
+        salonTables: config.salonTables,
+        salonCapacity: config.salonCapacity,
+        highTables: config.highTables || 0,
+        highTablesCapacity: config.highTablesCapacity || 0,
+        terraceTables: config.terraceTables || 0,
+        terraceCapacity: config.terraceCapacity || 0,
+        barSeats: config.barSeats || 0
+      });
     }
     setErrors({});
   };
@@ -385,103 +371,6 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
             </Box>
 
             <Divider sx={{ my: 3 }} />
-
-            {/* Configuración Avanzada */}
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                <Settings color="primary" />
-                <Typography variant="h6" fontWeight="600">
-                  Configuración Avanzada
-                </Typography>
-              </Box>
-
-              {/* Paga y señal */}
-              <Box sx={{ mb: 3 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={Boolean(editConfig.requiresDeposit)}
-                      onChange={(e) => setEditConfig(prev => ({ ...prev, requiresDeposit: e.target.checked }))}
-                    />
-                  }
-                  label="¿Requiere paga y señal?"
-                  sx={{ mb: 2 }}
-                />
-                
-                {Boolean(editConfig.requiresDeposit) && (
-                  <Box sx={{ ml: 2 }}>
-                    <FormControl component="fieldset" sx={{ mb: 2 }}>
-                      <FormLabel component="legend">Tipo de paga y señal:</FormLabel>
-                      <RadioGroup
-                        value={editConfig.depositType || 'FIXED_PER_RESERVATION'}
-                        onChange={(e) => setEditConfig(prev => ({ ...prev, depositType: e.target.value as 'FIXED_PER_RESERVATION' | 'PER_PERSON' }))}
-                        row
-                      >
-                        <FormControlLabel
-                          value="FIXED_PER_RESERVATION"
-                          control={<Radio />}
-                          label="Valor fijo por reserva"
-                        />
-                        <FormControlLabel
-                          value="PER_PERSON"
-                          control={<Radio />}
-                          label="Valor por persona"
-                        />
-                      </RadioGroup>
-                    </FormControl>
-                    
-                    <TextField
-                      fullWidth
-                      label={`Cantidad (€) ${(editConfig.depositType || 'FIXED_PER_RESERVATION') === 'PER_PERSON' ? 'por persona' : 'por reserva'}`}
-                      type="number"
-                      value={editConfig.depositAmount || ''}
-                      onChange={(e) => setEditConfig(prev => ({ ...prev, depositAmount: parseFloat(e.target.value) || undefined }))}
-                      inputProps={{ min: 0, step: 0.01 }}
-                      sx={{ maxWidth: 300 }}
-                    />
-                  </Box>
-                )}
-              </Box>
-
-              {/* Preguntas adicionales */}
-              <Box>
-                <Typography variant="subtitle1" fontWeight="600" sx={{ mb: 2 }}>
-                  Preguntas adicionales para las reservas:
-                </Typography>
-                
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={Boolean(editConfig.askReservationReason)}
-                        onChange={(e) => setEditConfig(prev => ({ ...prev, askReservationReason: e.target.checked }))}
-                      />
-                    }
-                    label="¿Preguntar por el motivo de la reserva? (cumpleaños, aniversario, etc.)"
-                  />
-                  
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={Boolean(editConfig.askAllergies)}
-                        onChange={(e) => setEditConfig(prev => ({ ...prev, askAllergies: e.target.checked }))}
-                      />
-                    }
-                    label="¿Preguntar por alergias o intolerancias?"
-                  />
-                  
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={Boolean(editConfig.askFoodType)}
-                        onChange={(e) => setEditConfig(prev => ({ ...prev, askFoodType: e.target.checked }))}
-                      />
-                    }
-                    label="¿Preguntar por el tipo de comida? (menú, carta, degustación, etc.)"
-                  />
-                </Box>
-              </Box>
-            </Box>
 
             {/* Always show save/cancel buttons - removed editing condition */}
               <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>

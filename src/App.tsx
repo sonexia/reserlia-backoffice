@@ -3,11 +3,13 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, AppBar, Toolbar, Box, Button, Container, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
-import { Settings, MoreVert, Logout, CreditCard } from '@mui/icons-material';
+import { MoreVert, Logout, CreditCard, Restaurant, Schedule, Tune } from '@mui/icons-material';
 import ReservationFormModal from "./components/ReservationFormModal";
 import ReservationTable from "./components/ReservationTable";
 import RestaurantSetup from "./components/RestaurantSetup";
 import RestaurantSettings from "./components/RestaurantSettings";
+import ScheduleSettings from "./components/ScheduleSettings";
+import AdvancedSettings from "./components/AdvancedSettings";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
 import { useRestaurantConfig, RestaurantConfig } from "./hooks/useRestaurantConfig";
@@ -26,7 +28,9 @@ function App() {
   const [reservations, setReservations] = useState<Array<Schema["Reservation"]["type"]>>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Schema["Reservation"]["type"] | null>(null);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [basicSettingsOpen, setBasicSettingsOpen] = useState(false);
+  const [scheduleSettingsOpen, setScheduleSettingsOpen] = useState(false);
+  const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
   const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   
   // Filter state for reservations
@@ -121,8 +125,18 @@ function App() {
     setMenuAnchor(null);
   };
 
-  const handleSettingsClick = () => {
-    setSettingsOpen(true);
+  const handleBasicSettingsClick = () => {
+    setBasicSettingsOpen(true);
+    handleMenuClose();
+  };
+
+  const handleScheduleSettingsClick = () => {
+    setScheduleSettingsOpen(true);
+    handleMenuClose();
+  };
+
+  const handleAdvancedSettingsClick = () => {
+    setAdvancedSettingsOpen(true);
     handleMenuClose();
   };
 
@@ -253,11 +267,23 @@ function App() {
                   </ListItemIcon>
                   <ListItemText>Facturación</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={handleSettingsClick}>
+                <MenuItem onClick={handleBasicSettingsClick}>
                   <ListItemIcon>
-                    <Settings fontSize="small" />
+                    <Restaurant fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Configuración del Restaurante</ListItemText>
+                  <ListItemText>Configuración Básica</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleScheduleSettingsClick}>
+                  <ListItemIcon>
+                    <Schedule fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Horarios</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleAdvancedSettingsClick}>
+                  <ListItemIcon>
+                    <Tune fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Configuración Avanzada</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={handleLogoutClick}>
                   <ListItemIcon>
@@ -338,13 +364,29 @@ function App() {
           onSave={handleSave}
         />
 
-        {/* Restaurant Settings Dialog */}
+        {/* Restaurant Settings Dialogs */}
         <RestaurantSettings
           config={config}
           onUpdate={handleConfigUpdate}
           loading={configSaving}
-          open={settingsOpen}
-          onClose={() => setSettingsOpen(false)}
+          open={basicSettingsOpen}
+          onClose={() => setBasicSettingsOpen(false)}
+        />
+        
+        <ScheduleSettings
+          config={config}
+          onUpdate={handleConfigUpdate}
+          loading={configSaving}
+          open={scheduleSettingsOpen}
+          onClose={() => setScheduleSettingsOpen(false)}
+        />
+        
+        <AdvancedSettings
+          config={config}
+          onUpdate={handleConfigUpdate}
+          loading={configSaving}
+          open={advancedSettingsOpen}
+          onClose={() => setAdvancedSettingsOpen(false)}
         />
       </Box>
     </ThemeProvider>

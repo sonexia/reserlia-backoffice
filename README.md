@@ -314,3 +314,8 @@ Recomendación: usa `.env.local` para desarrollo local y secretos del Sandbox cu
 - Asegure Node 20 (`nvm use 20`).
 
 
+
+
+
+
+npx dotenv -e .env.local -- npx ampx sandbox
