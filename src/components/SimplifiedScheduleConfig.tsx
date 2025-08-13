@@ -66,11 +66,18 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
 }) => {
   
   const updateScheduleGroup = (groupKey: 'weekdays' | 'saturday' | 'sunday', updates: Partial<ScheduleGroup>) => {
+    const currentGroup = schedule[groupKey];
+    
+    // If enabling the group and it has no time ranges, add a default one
+    const finalUpdates = updates.enabled === true && currentGroup.ranges.length === 0
+      ? { ...updates, ranges: [{ start: '09:00', end: '22:00' }] }
+      : updates;
+    
     onChange({
       ...schedule,
       [groupKey]: {
-        ...schedule[groupKey],
-        ...updates
+        ...currentGroup,
+        ...finalUpdates
       }
     });
   };
