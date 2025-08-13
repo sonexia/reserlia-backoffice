@@ -9,7 +9,9 @@ import {
   Typography,
   CircularProgress,
   Alert,
-  Divider
+  Divider,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import { Schedule, Save, Cancel } from '@mui/icons-material';
 import SimplifiedScheduleConfig, { SimplifiedSchedule } from './SimplifiedScheduleConfig';
@@ -60,7 +62,13 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
     }
   });
 
+  const [useSameSchedule, setUseSameSchedule] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Helper function to check if two schedules are the same
+  const schedulesAreEqual = (schedule1: SimplifiedSchedule, schedule2: SimplifiedSchedule): boolean => {
+    return JSON.stringify(schedule1) === JSON.stringify(schedule2);
+  };
 
   // Cargar configuración existente
   useEffect(() => {
@@ -69,10 +77,32 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
         setReservationSchedule(config.reservationSchedule as SimplifiedSchedule);
       }
       if (config.callRedirectionSchedule) {
-        setCallRedirectionSchedule(config.callRedirectionSchedule as SimplifiedSchedule);
+        const callSchedule = config.callRedirectionSchedule as SimplifiedSchedule;
+        setCallRedirectionSchedule(callSchedule);
+        
+        // Check if schedules are the same to determine initial state
+        if (config.reservationSchedule && schedulesAreEqual(config.reservationSchedule as SimplifiedSchedule, callSchedule)) {
+          setUseSameSchedule(true);
+        }
       }
     }
   }, [config]);
+
+  // Sync call redirection schedule when reservation schedule changes and useSameSchedule is true
+  useEffect(() => {
+    if (useSameSchedule) {
+      setCallRedirectionSchedule(reservationSchedule);
+    }
+  }, [reservationSchedule, useSameSchedule]);
+
+  // Handle toggle of "use same schedule"
+  const handleUseSameScheduleChange = (checked: boolean) => {
+    setUseSameSchedule(checked);
+    if (checked) {
+      // Copy reservation schedule to call redirection schedule
+      setCallRedirectionSchedule(reservationSchedule);
+    }
+  };
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -175,13 +205,31 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
 
           {/* Horarios de Redirección de Llamadas */}
           <Box>
-            <SimplifiedScheduleConfig
-              title="Horarios de Redirección de Llamadas"
-              description="Configura cuándo las llamadas deben ser redirigidas al bot de atención"
-              schedule={callRedirectionSchedule}
-              onChange={setCallRedirectionSchedule}
-              error={errors.callRedirectionSchedule}
-            />
+            {/* Checkbox para usar el mismo horario */}
+            <Box sx={{ mb: 2 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={useSameSchedule}
+                    onChange={(e) => handleUseSameScheduleChange(e.target.checked)}
+                  />
+                }
+                label="Usar el mismo horario que las reservas"
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ ml: 4 }}>
+                La mayoría de restaurantes tienen los mismos horarios para ambos
+              </Typography>
+            </Box>
+
+            {!useSameSchedule && (
+              <SimplifiedScheduleConfig
+                title="Horarios de Redirección de Llamadas"
+                description="Configura cuándo las llamadas deben ser redirigidas al bot de atención"
+                schedule={callRedirectionSchedule}
+                onChange={setCallRedirectionSchedule}
+                error={errors.callRedirectionSchedule}
+              />
+            )}
           </Box>
 
           {/* Errores generales */}
