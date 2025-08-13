@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuthenticator } from '@aws-amplify/ui-react';
+import { fetchUserAttributes } from 'aws-amplify/auth';
 import {
   Box,
   Paper,
@@ -46,6 +48,7 @@ interface RestaurantSetupProps {
 
 const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading = false }) => {
   const [activeStep, setActiveStep] = useState(0);
+  const { user } = useAuthenticator();
   
   // Helper function to create default simplified schedule
   const createDefaultSchedule = (): SimplifiedSchedule => ({
@@ -83,6 +86,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
 
   // Estado real del config con valores numéricos
   const [config, setConfig] = useState<Omit<RestaurantConfig, 'id'>>({
+    businessName: '',
     salonTables: 0,
     salonCapacity: 0,
     highTables: 0,
@@ -106,13 +110,65 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Auto-populate business name from Cognito user attributes
+  useEffect(() => {
+    console.log('🔍 DEBUG: RestaurantSetup useEffect triggered');
+    console.log('🔍 DEBUG: user object (COMPLETE):', user);
+    
+    if (user) {
+      console.log('🔍 DEBUG: Fetching user attributes with fetchUserAttributes...');
+      
+      // Use the proper Amplify API to fetch user attributes
+      fetchUserAttributes()
+        .then((attributes) => {
+          console.log('🔍 DEBUG: Fetched user attributes (COMPLETE):', attributes);
+          console.log('🔍 DEBUG: Available user attributes:');
+          
+          // Log all available attributes
+          Object.keys(attributes).forEach(key => {
+            console.log(`  - ${key}: ${attributes[key]}`);
+          });
+          
+          // Try to extract business name from user attributes
+          let businessName = '';
+          businessName = attributes['custom:business_name'] || 
+                        attributes['custom:company_name'] || 
+                        attributes['custom:restaurant_name'] ||
+                        attributes.name || 
+                        attributes.given_name || 
+                        attributes.family_name ||
+                        attributes.nickname ||
+                        '';
+          
+          console.log('🔍 DEBUG: Extracted businessName:', businessName);
+          console.log('🔍 DEBUG: Current config.businessName:', config.businessName);
+          
+          // Only set if we found a business name and current businessName is empty
+          if (businessName && !config.businessName) {
+            console.log('✅ DEBUG: Setting businessName to:', businessName);
+            setConfig(prev => ({ ...prev, businessName }));
+          } else {
+            console.log('⚠️ DEBUG: Not setting businessName. businessName:', businessName, 'config.businessName:', config.businessName);
+          }
+        })
+        .catch((error) => {
+          console.error('❌ DEBUG: Error fetching user attributes:', error);
+        });
+    } else {
+      console.log('⚠️ DEBUG: No user object available');
+    }
+  }, [user, config.businessName]);
+
   // Nota: Las funciones helper de manipulación de horarios ahora se manejan dentro del SimplifiedScheduleConfig
 
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
 
     switch (step) {
-      case 0: // Mesas de salón
+      case 0: // Información del negocio y mesas de salón
+        if (!config.businessName || config.businessName.trim() === '') {
+          newErrors.businessName = 'El nombre del negocio es obligatorio';
+        }
         if (!config.salonTables || config.salonTables <= 0) {
           newErrors.salonTables = 'Debe tener al menos 1 mesa en el salón';
         }
@@ -319,33 +375,50 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
               <StepContent sx={{ py: { xs: 1, sm: 1.5 } }}>
                 <Typography sx={{ mb: { xs: 1, sm: 2 } }}>{step.description}</Typography>
                 
-                {/* Paso 1: Mesas de salón */}
+                {/* Paso 1: Información del negocio y mesas de salón */}
                 {index === 0 && (
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ width: '100%' }}>
+                  <Stack spacing={3} sx={{ width: '100%' }}>
+                    {/* Nombre del negocio */}
                     <Box sx={{ width: '100%' }}>
                       <TextField
                         fullWidth
-                        label="Número de mesas de salón"
-                        type="number"
-                        value={inputValues.salonTables}
-                        onChange={(e) => handleInputChange('salonTables', e.target.value)}
-                        error={!!errors.salonTables}
-                        helperText={errors.salonTables}
-                        inputProps={{ min: 1 }}
+                        label="Nombre del negocio"
+                        value={config.businessName}
+                        onChange={(e) => setConfig(prev => ({ ...prev, businessName: e.target.value }))}
+                        error={!!errors.businessName}
+                        helperText={errors.businessName}
+                        required
+                        sx={{ mb: 2 }}
                       />
                     </Box>
-                    <Box sx={{ width: '100%' }}>
-                      <TextField
-                        fullWidth
-                        label="Capacidad total del salón"
-                        type="number"
-                        value={inputValues.salonCapacity}
-                        onChange={(e) => handleInputChange('salonCapacity', e.target.value)}
-                        error={!!errors.salonCapacity}
-                        helperText={errors.salonCapacity}
-                        inputProps={{ min: 1 }}
-                      />
-                    </Box>
+                    
+                    {/* Mesas de salón */}
+                    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+                      <Box sx={{ width: '100%' }}>
+                        <TextField
+                          fullWidth
+                          label="Número de mesas de salón"
+                          type="number"
+                          value={inputValues.salonTables}
+                          onChange={(e) => handleInputChange('salonTables', e.target.value)}
+                          error={!!errors.salonTables}
+                          helperText={errors.salonTables}
+                          inputProps={{ min: 1 }}
+                        />
+                      </Box>
+                      <Box sx={{ width: '100%' }}>
+                        <TextField
+                          fullWidth
+                          label="Capacidad total del salón"
+                          type="number"
+                          value={inputValues.salonCapacity}
+                          onChange={(e) => handleInputChange('salonCapacity', e.target.value)}
+                          error={!!errors.salonCapacity}
+                          helperText={errors.salonCapacity}
+                          inputProps={{ min: 1 }}
+                        />
+                      </Box>
+                    </Stack>
                   </Stack>
                 )}
 

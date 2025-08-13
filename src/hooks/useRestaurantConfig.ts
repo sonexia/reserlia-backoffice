@@ -29,9 +29,18 @@ export const useRestaurantConfig = () => {
       // Debería haber solo una configuración por usuario
       if (configs && configs.length > 0) {
         const restaurantConfig = configs[0];
+        
+        // Additional null check for restaurantConfig itself
+        if (!restaurantConfig || !restaurantConfig.id) {
+          console.warn('Restaurant config is malformed or missing id:', restaurantConfig);
+          setConfig(null);
+          return;
+        }
+        
         // Preservar valores nulos como undefined para mejor compatibilidad con TypeScript
         setConfig({
           id: restaurantConfig.id,
+          businessName: restaurantConfig.businessName || '', // Handle missing businessName for backward compatibility
           salonTables: restaurantConfig.salonTables,
           salonCapacity: restaurantConfig.salonCapacity,
           highTables: restaurantConfig.highTables !== null ? restaurantConfig.highTables : undefined,
@@ -78,6 +87,7 @@ export const useRestaurantConfig = () => {
         // El tipo parcial permite omitir createdAt y updatedAt que son gestionados internamente
         const updateData = {
           id: config.id,
+          businessName: newConfig.businessName,
           salonTables: newConfig.salonTables,
           salonCapacity: newConfig.salonCapacity,
           highTables: newConfig.highTables !== undefined ? newConfig.highTables : null,
@@ -108,6 +118,7 @@ export const useRestaurantConfig = () => {
         if (data) {
           setConfig({
             id: data.id,
+            businessName: data.businessName,
             salonTables: data.salonTables,
             salonCapacity: data.salonCapacity,
             highTables: data.highTables || 0,
@@ -138,6 +149,7 @@ export const useRestaurantConfig = () => {
         // Crear nueva configuración
         // Para crear una configuración, también usamos null para los campos opcionales en lugar de 0
         const createData = {
+          businessName: newConfig.businessName,
           salonTables: newConfig.salonTables,
           salonCapacity: newConfig.salonCapacity,
           highTables: newConfig.highTables !== undefined ? newConfig.highTables : null,
@@ -168,6 +180,7 @@ export const useRestaurantConfig = () => {
         if (data) {
           setConfig({
             id: data.id,
+            businessName: data.businessName,
             salonTables: data.salonTables,
             salonCapacity: data.salonCapacity,
             highTables: data.highTables || 0,

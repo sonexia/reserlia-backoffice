@@ -27,6 +27,7 @@ const schema = a.schema({
   RestaurantConfig: a
     .model({
       owner: a.string(), // Campo owner para identificar al usuario propietario (se llena automáticamente)
+      businessName: a.string(), // Nombre del negocio (opcional para backward compatibility)
       salonTables: a.integer().required(), // Número de mesas de salón
       salonCapacity: a.integer().required(), // Capacidad total de mesas de salón
       highTables: a.integer().default(0), // Mesas altas (opcional)

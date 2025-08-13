@@ -196,22 +196,10 @@ Esta sección resume cómo levantar el backend con Amplify Sandbox, cómo se gen
 
 ### 1) Arrancar Amplify Sandbox
 
-- Arranque en modo watch (recomendado durante desarrollo):
+Para arrancar el sandbox de Amplify, ejecuta:
 
 ```bash
-npx ampx sandbox
-```
-
-- Ejecución única (sin watch):
-
-```bash
-npx ampx sandbox --once
-```
-
-- Opcional: identificar un sandbox distinto (no necesario normalmente). Evita usar múltiples identifiers salvo que tengas un motivo concreto.
-
-```bash
-npx ampx sandbox --identifier <tu-identificador>
+npx dotenv -e .env.local -- npx ampx sandbox
 ```
 
 - Eliminar un sandbox (borra los recursos del entorno sandbox asociado al identifier actual):
@@ -241,47 +229,7 @@ npm run dev
 
 Si trabajas contra el Sandbox real (no Docker), no establezcas `VITE_AWS_ENV=local` para que consuma `amplify_outputs.json` generado por `ampx sandbox`.
 
-### 3) Variables de entorno (.env.local) y secretos del Sandbox
-
-Variables requeridas por la función de Stripe (`amplify/functions/createCheckout/handler.ts`):
-
-- `STRIPE_SECRET_KEY` (obligatoria)
-- `STRIPE_SUBSCRIPTION_PRICE_ID` (recurrente)
-- `STRIPE_SETUP_FEE_PRICE_ID` (opcional)
-- `STRIPE_SUCCESS_URL`
-- `STRIPE_CANCEL_URL`
-- `STRIPE_BILLING_PORTAL_RETURN_URL` (opcional)
-
-En local, define un archivo `.env.local` en la raíz del proyecto (no se commitea). Ejemplo:
-
-```bash
-# .env.local (ejemplo)
-STRIPE_SECRET_KEY=sk_test_123...
-STRIPE_SUBSCRIPTION_PRICE_ID=price_123...
-STRIPE_SUCCESS_URL=http://localhost:5173/payment/success?session_id={CHECKOUT_SESSION_ID}
-STRIPE_CANCEL_URL=http://localhost:5173/payment/cancel
-STRIPE_BILLING_PORTAL_RETURN_URL=http://localhost:5173/
-```
-
-Uso de `.env.local`:
-
-- La lambda de desarrollo (`npm run dev:lambda`) carga `.env.local` (prioridad) y `.env` automáticamente.
-- Para el Sandbox, puedes inyectar variables como secretos gestionados por Amplify:
-
-```bash
-# definir/actualizar secretos
-npx ampx sandbox secret set STRIPE_SECRET_KEY sk_test_123...
-npx ampx sandbox secret set STRIPE_SUBSCRIPTION_PRICE_ID price_123...
-npx ampx sandbox secret set STRIPE_SUCCESS_URL http://localhost:5173/payment/success?session_id={CHECKOUT_SESSION_ID}
-npx ampx sandbox secret set STRIPE_CANCEL_URL http://localhost:5173/payment/cancel
-
-# listar secretos
-npx ampx sandbox secret list
-```
-
-Recomendación: usa `.env.local` para desarrollo local y secretos del Sandbox cuando necesites que las funciones cloud del Sandbox tengan acceso a esas variables durante la síntesis/ejecución.
-
-### 4) Troubleshooting rápido
+### 3) Troubleshooting rápido
 
 - Error: “Missing/undefined STRIPE_SECRET_KEY” al arrancar Sandbox o invocar la Lambda
   - Solución: crear `.env.local` con la clave o establecer el secreto con `ampx sandbox secret set STRIPE_SECRET_KEY ...` y reiniciar `npx ampx sandbox`.

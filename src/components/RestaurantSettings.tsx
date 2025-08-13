@@ -43,8 +43,9 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
   onClose
 }) => {
   // Removed editing state - fields are always editable now
-  // Solo configuración básica: mesas, capacidades y zonas
+  // Solo configuración básica: nombre del negocio, mesas, capacidades y zonas
   const [editConfig, setEditConfig] = useState({
+    businessName: '',
     salonTables: 0,
     salonCapacity: 0,
     highTables: 0,
@@ -59,6 +60,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
   useEffect(() => {
     if (config) {
       setEditConfig({
+        businessName: config.businessName || '',
         salonTables: config.salonTables,
         salonCapacity: config.salonCapacity,
         highTables: config.highTables || 0,
@@ -72,6 +74,10 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
+
+    if (!editConfig.businessName || editConfig.businessName.trim() === '') {
+      newErrors.businessName = 'El nombre del negocio es obligatorio';
+    }
 
     if (!editConfig.salonTables || editConfig.salonTables <= 0) {
       newErrors.salonTables = 'Debe tener al menos 1 mesa en el salón';
@@ -107,7 +113,12 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
 
   const handleSave = () => {
     if (validate()) {
-      onUpdate(editConfig);
+      // CRITICAL: Merge with existing config to preserve subscription and advanced settings
+      const updatedConfig = {
+        ...config, // Preserve ALL existing fields (subscription, advanced settings, etc.)
+        ...editConfig // Override only the fields we're editing (basic settings + businessName)
+      };
+      onUpdate(updatedConfig);
     }
   };
 
@@ -115,6 +126,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
     if (config) {
       // Resetear solo los campos básicos
       setEditConfig({
+        businessName: config.businessName || '',
         salonTables: config.salonTables,
         salonCapacity: config.salonCapacity,
         highTables: config.highTables || 0,
@@ -227,6 +239,31 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
           </Box>
 
           <Paper variant="outlined" sx={{ p: 3 }}>
+            {/* Nombre del negocio */}
+            <Box sx={{ mb: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Settings color="primary" />
+                <Typography variant="h6" fontWeight="600">
+                  Información del Negocio
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 400px', minWidth: '300px' }}>
+                  <TextField
+                    fullWidth
+                    label="Nombre del negocio"
+                    value={editConfig.businessName}
+                    onChange={(e) => setEditConfig(prev => ({ ...prev, businessName: e.target.value }))}
+                    error={!!errors.businessName}
+                    helperText={errors.businessName}
+                    required
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            <Divider sx={{ my: 3 }} />
+
             {/* Mesas de salón */}
             <Box sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>

@@ -242,6 +242,29 @@ function App() {
               </Box>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {/* Restaurant name display */}
+              {config?.businessName && (
+                <Box sx={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 1,
+                  mr: 2,
+                  px: 2,
+                  py: 1,
+                  bgcolor: 'rgba(0, 201, 167, 0.1)',
+                  borderRadius: 2,
+                  border: '1px solid rgba(0, 201, 167, 0.2)'
+                }}>
+                  <Restaurant sx={{ fontSize: 20, color: 'primary.main' }} />
+                  <Box sx={{ 
+                    fontSize: '0.875rem', 
+                    fontWeight: 600, 
+                    color: 'text.primary' 
+                  }}>
+                    {config.businessName}
+                  </Box>
+                </Box>
+              )}
               <IconButton
                 onClick={handleMenuOpen}
                 sx={{ 
