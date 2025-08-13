@@ -111,12 +111,35 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
     updateScheduleGroup(groupKey, { ranges: newRanges });
   };
 
+  // Helper function to generate dynamic weekday label
+  const getWeekdayLabel = () => {
+    const weekdayKeys: (keyof SimplifiedSchedule['enabledDays'])[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
+    const enabledWeekdays = weekdayKeys.filter(day => schedule.enabledDays[day]);
+    
+    if (enabledWeekdays.length === 5) {
+      return 'De lunes a viernes';
+    } else if (enabledWeekdays.length === 0) {
+      return 'Ningún día seleccionado';
+    } else {
+      const dayLabels = enabledWeekdays.map(day => dayNames[day]);
+      if (dayLabels.length === 1) {
+        return dayLabels[0];
+      } else if (dayLabels.length === 2) {
+        return dayLabels.join(' y ');
+      } else {
+        const lastDay = dayLabels.pop();
+        return `${dayLabels.join(', ')} y ${lastDay}`;
+      }
+    }
+  };
+
   const renderScheduleGroup = (
     groupKey: 'weekdays' | 'saturday' | 'sunday',
     groupTitle: string,
     groupSubtitle: string
   ) => {
     const group = schedule[groupKey];
+    const isWeekdaysGroup = groupKey === 'weekdays';
     
     return (
       <Card key={groupKey} sx={{ mb: 2 }}>
@@ -124,7 +147,9 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <AccessTime sx={{ mr: 1, color: 'primary.main' }} />
             <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6">{groupTitle}</Typography>
+              <Typography variant="h6">
+                {isWeekdaysGroup ? getWeekdayLabel() : groupTitle}
+              </Typography>
               <Typography variant="body2" color="text.secondary">
                 {groupSubtitle}
               </Typography>
@@ -179,6 +204,35 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
               >
                 <Add /> Añadir horario
               </IconButton>
+
+              {/* Individual weekday toggles for weekdays group only */}
+              {isWeekdaysGroup && (
+                <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+                  <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
+                    Días de semana individuales
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Puedes desactivar días específicos (ej: cerrado los lunes)
+                  </Typography>
+                  
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const).map((day) => (
+                      <FormControlLabel
+                        key={day}
+                        control={
+                          <Switch
+                            checked={schedule.enabledDays[day]}
+                            onChange={(e) => updateEnabledDay(day, e.target.checked)}
+                            size="small"
+                          />
+                        }
+                        label={dayNames[day]}
+                        sx={{ m: 0, minWidth: 'auto' }}
+                      />
+                    ))}
+                  </Box>
+                </Box>
+              )}
             </>
           )}
         </CardContent>
@@ -186,37 +240,7 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
     );
   };
 
-  const renderIndividualDayToggles = () => {
-    const weekdayKeys: (keyof SimplifiedSchedule['enabledDays'])[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'];
 
-    return (
-      <Card sx={{ mt: 2 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ mb: 2 }}>Días de semana individuales</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Puedes desactivar días específicos de lunes a viernes (ej: cerrado los lunes)
-          </Typography>
-          
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {weekdayKeys.map((day) => (
-              <FormControlLabel
-                key={day}
-                control={
-                  <Switch
-                    checked={schedule.enabledDays[day]}
-                    onChange={(e) => updateEnabledDay(day, e.target.checked)}
-                    size="small"
-                  />
-                }
-                label={dayNames[day]}
-                sx={{ m: 0, minWidth: 'auto' }}
-              />
-            ))}
-          </Box>
-        </CardContent>
-      </Card>
-    );
-  };
 
   return (
     <Box>
@@ -230,8 +254,6 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
       {renderScheduleGroup('weekdays', 'Lunes a Viernes', 'Horarios para días laborables')}
       {renderScheduleGroup('saturday', 'Sábado', 'Horarios para el sábado')}
       {renderScheduleGroup('sunday', 'Domingo', 'Horarios para el domingo')}
-
-      {renderIndividualDayToggles()}
 
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>
