@@ -51,6 +51,7 @@ const schema = a.schema({
       callRedirectionSchedule: a.json(), // Horarios de redirección de llamadas por día de la semana
       maxDinersPerBot: a.integer().default(6), // Número máximo de comensales que atenderá el bot
       reservationDuration: a.integer().default(120), // Tiempo de reserva en minutos (tiempo para comer)
+      timezone: a.string().default('Europe/Madrid'), // Zona horaria del restaurante
 
       // Suscripción Stripe
       subscriptionStatus: a.enum(['none', 'active', 'past_due', 'canceled']),

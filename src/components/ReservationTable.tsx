@@ -11,9 +11,10 @@ export interface ReservationTableProps {
   reservations: Array<Schema["Reservation"]["type"]>;
   onEdit: (reservation: Schema["Reservation"]["type"]) => void;
   onDelete: (reservation: Schema["Reservation"]["type"]) => void;
+  timezone?: string;
 }
 
-export default function ReservationTable({ reservations, onEdit, onDelete }: ReservationTableProps) {
+export default function ReservationTable({ reservations, onEdit, onDelete, timezone = 'Europe/Madrid' }: ReservationTableProps) {
   const columns = useMemo<MRT_ColumnDef<Schema["Reservation"]["type"]>[]>(
     () => [
       {
@@ -22,7 +23,18 @@ export default function ReservationTable({ reservations, onEdit, onDelete }: Res
         accessorFn: (row) => new Date((row as Schema["Reservation"]["type"]).datetime as unknown as string),
         id: "datetime",
         header: "Fecha y hora",
-        Cell: ({ cell }) => (cell.getValue<Date>()).toLocaleString(),
+        Cell: ({ cell }) => {
+          const date = cell.getValue<Date>();
+          return date.toLocaleString('es-ES', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short'
+          });
+        },
         filterVariant: "date",
         filterFn: "between",
         size: 180,
@@ -48,7 +60,7 @@ export default function ReservationTable({ reservations, onEdit, onDelete }: Res
         header: "Observaciones",
       },
     ],
-    []
+    [timezone]
   );
 
   return (

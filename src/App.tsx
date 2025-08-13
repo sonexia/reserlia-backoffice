@@ -374,6 +374,7 @@ function App() {
             reservations={filteredReservations}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            timezone={config?.timezone || undefined}
           />
         </Container>
 

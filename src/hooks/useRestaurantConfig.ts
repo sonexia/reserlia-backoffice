@@ -60,6 +60,7 @@ export const useRestaurantConfig = () => {
           callRedirectionSchedule: restaurantConfig.callRedirectionSchedule ? JSON.parse(restaurantConfig.callRedirectionSchedule as string) : undefined,
           maxDinersPerBot: restaurantConfig.maxDinersPerBot !== null ? restaurantConfig.maxDinersPerBot : undefined,
           reservationDuration: restaurantConfig.reservationDuration !== null ? restaurantConfig.reservationDuration : undefined,
+          timezone: restaurantConfig.timezone || 'Europe/Madrid',
           // Suscripción
           subscriptionStatus: restaurantConfig.subscriptionStatus ?? undefined,
           stripeCustomerId: restaurantConfig.stripeCustomerId ?? undefined,
@@ -107,6 +108,7 @@ export const useRestaurantConfig = () => {
           callRedirectionSchedule: newConfig.callRedirectionSchedule ? JSON.stringify(newConfig.callRedirectionSchedule) : null,
           maxDinersPerBot: newConfig.maxDinersPerBot !== undefined ? newConfig.maxDinersPerBot : null,
           reservationDuration: newConfig.reservationDuration !== undefined ? newConfig.reservationDuration : null,
+          timezone: newConfig.timezone || 'Europe/Madrid',
           // Suscripción
           subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
           stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,
@@ -138,6 +140,7 @@ export const useRestaurantConfig = () => {
             callRedirectionSchedule: data.callRedirectionSchedule ? JSON.parse(data.callRedirectionSchedule as string) : undefined,
             maxDinersPerBot: data.maxDinersPerBot || 6,
             reservationDuration: data.reservationDuration || 120,
+            timezone: data.timezone || 'Europe/Madrid',
             // Suscripción
             subscriptionStatus: data.subscriptionStatus || 'none',
             stripeCustomerId: data.stripeCustomerId || undefined,
@@ -169,6 +172,7 @@ export const useRestaurantConfig = () => {
           callRedirectionSchedule: newConfig.callRedirectionSchedule ? JSON.stringify(newConfig.callRedirectionSchedule) : null,
           maxDinersPerBot: newConfig.maxDinersPerBot !== undefined ? newConfig.maxDinersPerBot : null,
           reservationDuration: newConfig.reservationDuration !== undefined ? newConfig.reservationDuration : null,
+          timezone: newConfig.timezone || 'Europe/Madrid',
           // Suscripción
           subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
           stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,

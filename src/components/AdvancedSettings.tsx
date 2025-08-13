@@ -43,6 +43,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
     // Configuración del bot
     maxDinersPerBot: undefined as number | undefined,
     reservationDuration: undefined as number | undefined,
+    timezone: 'Europe/Madrid' as string,
     
     // Configuración de depósitos
     requiresDeposit: false,
@@ -63,6 +64,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
       setEditConfig({
         maxDinersPerBot: config.maxDinersPerBot || undefined,
         reservationDuration: config.reservationDuration || undefined,
+        timezone: config.timezone || 'Europe/Madrid',
         requiresDeposit: config.requiresDeposit || false,
         depositType: config.depositType || 'FIXED_PER_RESERVATION',
         depositAmount: config.depositAmount || undefined,
@@ -103,6 +105,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         ...config,
         maxDinersPerBot: editConfig.maxDinersPerBot,
         reservationDuration: editConfig.reservationDuration,
+        timezone: editConfig.timezone,
         requiresDeposit: editConfig.requiresDeposit,
         depositType: editConfig.depositType,
         depositAmount: editConfig.depositAmount,
@@ -120,6 +123,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
       setEditConfig({
         maxDinersPerBot: config.maxDinersPerBot || undefined,
         reservationDuration: config.reservationDuration || undefined,
+        timezone: config.timezone || 'Europe/Madrid',
         requiresDeposit: config.requiresDeposit || false,
         depositType: config.depositType || 'FIXED_PER_RESERVATION',
         depositAmount: config.depositAmount || undefined,
@@ -199,6 +203,34 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                   inputProps={{ min: 15, step: 15 }}
                   sx={{ maxWidth: 300 }}
                 />
+                
+                <TextField
+                  select
+                  fullWidth
+                  label="Zona horaria del restaurante"
+                  value={editConfig.timezone}
+                  onChange={(e) => setEditConfig(prev => ({ 
+                    ...prev, 
+                    timezone: e.target.value 
+                  }))}
+                  helperText="Todas las reservas se mostrarán en esta zona horaria"
+                  sx={{ maxWidth: 300 }}
+                  SelectProps={{
+                    native: true,
+                  }}
+                >
+                  <option value="Europe/Madrid">Europa/Madrid (CET/CEST)</option>
+                  <option value="Europe/London">Europa/Londres (GMT/BST)</option>
+                  <option value="Europe/Paris">Europa/París (CET/CEST)</option>
+                  <option value="Europe/Berlin">Europa/Berlín (CET/CEST)</option>
+                  <option value="Europe/Rome">Europa/Roma (CET/CEST)</option>
+                  <option value="America/New_York">América/Nueva York (EST/EDT)</option>
+                  <option value="America/Los_Angeles">América/Los Ángeles (PST/PDT)</option>
+                  <option value="America/Mexico_City">América/Ciudad de México (CST/CDT)</option>
+                  <option value="America/Buenos_Aires">América/Buenos Aires (ART)</option>
+                  <option value="Asia/Tokyo">Asia/Tokio (JST)</option>
+                  <option value="Australia/Sydney">Australia/Sídney (AEST/AEDT)</option>
+                </TextField>
               </Box>
             </CardContent>
           </Card>
