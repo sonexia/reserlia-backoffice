@@ -14,14 +14,14 @@ import {
   RadioGroup,
   Radio,
   FormLabel,
-  CircularProgress,
   Alert,
   Card,
   CardContent,
   Tooltip,
-  IconButton
+  IconButton,
+  CircularProgress
 } from '@mui/material';
-import { Settings, Save, Cancel, Help } from '@mui/icons-material';
+import { Tune, Help, Save, Cancel } from '@mui/icons-material';
 import { RestaurantConfig } from '../hooks/useRestaurantConfig';
 
 interface AdvancedSettingsProps {
@@ -142,6 +142,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         askFoodType: editConfig.askFoodType
       };
       onUpdate(updatedConfig);
+      onClose?.(); // Close the popup after saving
     }
   };
 
@@ -173,28 +174,47 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
       onClose={onClose}
       maxWidth="md"
       fullWidth
+      fullScreen={false}
       PaperProps={{
-        sx: { borderRadius: 2 }
+        sx: { 
+          borderRadius: { xs: 0, sm: 2 },
+          margin: { xs: 1, sm: 2 },
+          width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+          maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' }
+        }
       }}
     >
-      <DialogTitle>
+      <DialogTitle sx={{ pb: { xs: 1, sm: 2 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Settings color="primary" />
-          Configuración Avanzada
+          <Tune color="primary" />
+          <Box sx={{ 
+            fontSize: { xs: '1.1rem', sm: '1.25rem' },
+            fontWeight: 600 
+          }}>
+            Configuración Avanzada
+          </Box>
         </Box>
       </DialogTitle>
       
-      <DialogContent>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
         <Box sx={{ py: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Configura aspectos avanzados de tu restaurante como límites del bot, depósitos y preguntas adicionales
+          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 2, sm: 3 } }}>
+            Configura opciones avanzadas para tu restaurante: límites del bot, depósitos y preguntas adicionales
           </Typography>
 
           {/* Configuración del Bot */}
           <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <Typography variant="h6">
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 1, 
+                mb: 2,
+                flexWrap: 'wrap'
+              }}>
+                <Typography variant="h6" sx={{ 
+                  fontSize: { xs: '1rem', sm: '1.25rem' }
+                }}>
                   Configuración del Bot de Reservas
                 </Typography>
                 <Tooltip title="Estos parámetros controlan cómo funciona el bot de atención automática">
@@ -217,7 +237,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                   error={Boolean(errors.maxDinersPerBot)}
                   helperText={errors.maxDinersPerBot || 'Número máximo de comensales que el bot puede gestionar por reserva'}
                   inputProps={{ min: 1 }}
-                  sx={{ maxWidth: 300 }}
+                  sx={{ maxWidth: { xs: '100%', sm: 300 } }}
                 />
 
                 <TextField
@@ -232,7 +252,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                   error={Boolean(errors.reservationDuration)}
                   helperText={errors.reservationDuration || 'Tiempo estimado que ocupará cada mesa (ayuda a calcular disponibilidad)'}
                   inputProps={{ min: 15, step: 15 }}
-                  sx={{ maxWidth: 300 }}
+                  sx={{ maxWidth: { xs: '100%', sm: 300 } }}
                 />
                 
                 <TextField
@@ -268,8 +288,11 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
 
           {/* Configuración de Depósitos */}
           <Card sx={{ mb: 3 }}>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography variant="h6" sx={{ 
+                mb: 2,
+                fontSize: { xs: '1rem', sm: '1.25rem' }
+              }}>
                 Configuración de Paga y Señal
               </Typography>
 
@@ -282,10 +305,16 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                     />
                   }
                   label="¿Requiere paga y señal para confirmar reservas?"
+                  sx={{ alignItems: 'flex-start' }}
                 />
 
                 {editConfig.requiresDeposit && (
-                  <Box sx={{ ml: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{ 
+                    ml: { xs: 1, sm: 3 }, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 2 
+                  }}>
                     <FormControl>
                       <FormLabel>Tipo de depósito</FormLabel>
                       <RadioGroup
@@ -320,7 +349,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                       error={Boolean(errors.depositAmount)}
                       helperText={errors.depositAmount}
                       inputProps={{ min: 0, step: 0.01 }}
-                      sx={{ maxWidth: 300 }}
+                      sx={{ maxWidth: { xs: '100%', sm: 300 } }}
                     />
                   </Box>
                 )}
@@ -329,16 +358,26 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
           </Card>
 
           {/* Configuración de Margen de Reserva */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
-                Margen de Reserva
+          <Card sx={{ mb: 3 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 2,
+                flexWrap: 'wrap',
+                gap: 1
+              }}>
+                <Typography variant="h6" sx={{ 
+                  fontSize: { xs: '1rem', sm: '1.25rem' }
+                }}>
+                  Margen de Reserva
+                </Typography>
                 <Tooltip title="Configure el tiempo mínimo de antelación para aceptar reservas y qué hacer cuando no se cumple">
-                  <IconButton size="small" sx={{ ml: 1 }}>
+                  <IconButton size="small">
                     <Help fontSize="small" />
                   </IconButton>
                 </Tooltip>
-              </Typography>
+              </Box>
               
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <FormControlLabel
@@ -364,8 +403,18 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                   label="Habilitar margen mínimo de reserva"
                 />
                 {editConfig.enableReservationMargin && (
-                  <Box sx={{ ml: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, maxWidth: 300 }}>
+                  <Box sx={{ 
+                    ml: { xs: 1, sm: 3 }, 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: 2 
+                  }}>
+                    <Box sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: 1, 
+                      maxWidth: { xs: '100%', sm: 300 }
+                    }}>
                       <TextField
                         label="Tiempo mínimo de antelación (minutos)"
                         type="text"
@@ -395,9 +444,12 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                 )}
 
                 {editConfig.enableReservationMargin && (
-                  <Box>
-                    <FormControl component="fieldset" sx={{ mt: 1 }}>
-                      <FormLabel component="legend">
+                  <Box sx={{ ml: { xs: 1, sm: 3 } }}>
+                    <FormControl component="fieldset" sx={{ mt: 1, width: '100%' }}>
+                      <FormLabel component="legend" sx={{ 
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                        mb: 1
+                      }}>
                         ¿Qué hacer cuando una reserva no cumple el tiempo mínimo?
                       </FormLabel>
                       <RadioGroup
@@ -406,16 +458,33 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                           ...prev, 
                           actionDuringReservationGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
                         }))}
+                        sx={{ gap: { xs: 1, sm: 0.5 } }}
                       >
                         <FormControlLabel
                           value="DISCARD"
                           control={<Radio />}
                           label="Descartar la reserva (informar al cliente que no se puede reservar con tan poca antelación)"
+                          sx={{ 
+                            alignItems: 'flex-start',
+                            '& .MuiFormControlLabel-label': { 
+                              fontSize: { xs: '0.875rem', sm: '1rem' },
+                              lineHeight: 1.4,
+                              mt: 0.25
+                            }
+                          }}
                         />
                         <FormControlLabel
                           value="REDIRECT"
                           control={<Radio />}
                           label="Redireccionar a la persona de contacto del restaurante"
+                          sx={{ 
+                            alignItems: 'flex-start',
+                            '& .MuiFormControlLabel-label': { 
+                              fontSize: { xs: '0.875rem', sm: '1rem' },
+                              lineHeight: 1.4,
+                              mt: 0.25
+                            }
+                          }}
                         />
                       </RadioGroup>
                     </FormControl>
@@ -426,13 +495,16 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
           </Card>
 
           {/* Preguntas Adicionales */}
-          <Card>
-            <CardContent>
-              <Typography variant="h6" sx={{ mb: 2 }}>
+          <Card sx={{ mb: 3 }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography variant="h6" sx={{ 
+                mb: 2,
+                fontSize: { xs: '1rem', sm: '1.25rem' }
+              }}>
                 Preguntas Adicionales para las Reservas
               </Typography>
               
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, sm: 1 } }}>
                 <FormControlLabel
                   control={
                     <Switch
@@ -441,6 +513,14 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                     />
                   }
                   label="¿Preguntar por el motivo de la reserva? (cumpleaños, aniversario, etc.)"
+                  sx={{ 
+                    alignItems: 'flex-start',
+                    '& .MuiFormControlLabel-label': { 
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      lineHeight: 1.4,
+                      mt: 0.25
+                    }
+                  }}
                 />
                 
                 <FormControlLabel
@@ -451,6 +531,14 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                     />
                   }
                   label="¿Preguntar por alergias o intolerancias?"
+                  sx={{ 
+                    alignItems: 'flex-start',
+                    '& .MuiFormControlLabel-label': { 
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      lineHeight: 1.4,
+                      mt: 0.25
+                    }
+                  }}
                 />
                 
                 <FormControlLabel
@@ -461,6 +549,14 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                     />
                   }
                   label="¿Preguntar por el tipo de comida? (menú, carta, degustación, etc.)"
+                  sx={{ 
+                    alignItems: 'flex-start',
+                    '& .MuiFormControlLabel-label': { 
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      lineHeight: 1.4,
+                      mt: 0.25
+                    }
+                  }}
                 />
               </Box>
             </CardContent>
@@ -475,11 +571,24 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2 }}>
+      <DialogActions sx={{ 
+        px: { xs: 2, sm: 3 }, 
+        pb: { xs: 2, sm: 3 },
+        pt: { xs: 1, sm: 2 },
+        gap: { xs: 1.5, sm: 1 },
+        flexDirection: { xs: 'column-reverse', sm: 'row' },
+        borderTop: '1px solid',
+        borderColor: 'divider'
+      }}>
         <Button
           onClick={handleCancel}
           startIcon={<Cancel />}
           disabled={loading}
+          variant="outlined"
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { sm: 120 }
+          }}
         >
           Cancelar
         </Button>
@@ -488,8 +597,12 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
           onClick={handleSave}
           startIcon={loading ? <CircularProgress size={20} /> : <Save />}
           disabled={loading}
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { sm: 140 }
+          }}
         >
-          {loading ? 'Guardando...' : 'Guardar Configuración'}
+          {loading ? 'Guardando...' : 'Guardar cambios'}
         </Button>
       </DialogActions>
     </Dialog>

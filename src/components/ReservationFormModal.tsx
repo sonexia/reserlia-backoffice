@@ -7,8 +7,11 @@ import {
   TextField, 
   Button, 
   Box, 
-  Alert 
+  Alert,
+  CircularProgress,
+  Typography
 } from '@mui/material';
+import { Save, Cancel, AddCircleOutline, EditOutlined } from '@mui/icons-material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -45,6 +48,7 @@ export default function ReservationFormModal({
   const [location, setLocation] = useState(reservation?.location || "");
   const [notes, setNotes] = useState(reservation?.notes || "");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
 
   // Initialize form when reservation changes
@@ -71,8 +75,7 @@ export default function ReservationFormModal({
 
   if (!open) return null;
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
+  const handleSave = async () => {
     // Basic validation
     if (!selectedDate || !customerName || !partySize) {
       setError("Por favor completa los campos obligatorios.");
@@ -80,13 +83,26 @@ export default function ReservationFormModal({
     }
     
     try {
+      setLoading(true);
       // Convertir a formato ISO8601 completo (lo que espera AWS AppSync/DynamoDB)
       const isoDateTime = selectedDate.toISOString();
-      onSave({ datetime: isoDateTime, customerName, phoneNumber, partySize, tableNumber, location, notes });
+      await onSave({ datetime: isoDateTime, customerName, phoneNumber, partySize, tableNumber, location, notes });
+      onClose();
     } catch (err) {
       console.error("Error al formatear la fecha:", err);
       setError("Formato de fecha incorrecto. Por favor verifica.");
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleCancel = () => {
+    onClose();
+  };
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    handleSave();
   }
 
   return (
@@ -96,23 +112,29 @@ export default function ReservationFormModal({
         onClose={onClose} 
         maxWidth="sm" 
         fullWidth
+        fullScreen={false} // Prevent fullscreen on mobile for better UX
         PaperProps={{
-          sx: {
-            borderRadius: 3,
-            p: 1
+          sx: { 
+            borderRadius: { xs: 0, sm: 2 }, // No border radius on mobile
+            margin: { xs: 1, sm: 2 }, // Reduced margin on mobile
+            width: { xs: 'calc(100% - 16px)', sm: 'auto' }, // Full width with small margins on mobile
+            maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' } // Constrain height on mobile
           }
         }}
       >
-        <DialogTitle sx={{ 
-          fontSize: '1.5rem', 
-          fontWeight: 600, 
-          color: 'text.primary',
-          pb: 1
-        }}>
-          {reservation ? "Editar reserva" : "Nueva reserva"}
+        <DialogTitle sx={{ pb: { xs: 1, sm: 2 } }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {reservation ? <EditOutlined color="primary" /> : <AddCircleOutline color="primary" />}
+            <Typography sx={{ 
+              fontSize: { xs: '1.1rem', sm: '1.25rem' },
+              fontWeight: 600 
+            }}>
+              {reservation ? "Editar reserva" : "Nueva reserva"}
+            </Typography>
+          </Box>
         </DialogTitle>
         
-        <DialogContent>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -288,30 +310,38 @@ export default function ReservationFormModal({
           </Box>
         </DialogContent>
         
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button 
-            onClick={onClose} 
+        <DialogActions sx={{ 
+          px: { xs: 2, sm: 3 }, 
+          pb: { xs: 2, sm: 3 },
+          pt: { xs: 1, sm: 2 },
+          gap: { xs: 1.5, sm: 1 },
+          flexDirection: { xs: 'column-reverse', sm: 'row' },
+          borderTop: '1px solid',
+          borderColor: 'divider'
+        }}>
+          <Button
+            onClick={handleCancel}
+            startIcon={<Cancel />}
+            disabled={loading}
             variant="outlined"
             sx={{ 
-              borderRadius: 2,
-              px: 3
+              width: { xs: '100%', sm: 'auto' },
+              minWidth: { sm: 120 }
             }}
           >
             Cancelar
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
             variant="contained"
+            onClick={handleSave}
+            startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+            disabled={loading}
             sx={{ 
-              borderRadius: 2,
-              px: 3,
-              bgcolor: 'primary.main',
-              '&:hover': {
-                bgcolor: 'primary.dark'
-              }
+              width: { xs: '100%', sm: 'auto' },
+              minWidth: { sm: 140 }
             }}
           >
-            Guardar
+            {loading ? 'Guardando...' : 'Guardar cambios'}
           </Button>
         </DialogActions>
       </Dialog>

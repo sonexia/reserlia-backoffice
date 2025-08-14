@@ -119,6 +119,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
         ...editConfig // Override only the fields we're editing (basic settings + businessName)
       };
       onUpdate(updatedConfig);
+      onClose?.(); // Close the popup after saving
     }
   };
 
@@ -137,6 +138,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
       });
     }
     setErrors({});
+    onClose?.(); // Close the popup after canceling
   };
 
   const updateConfig = (field: keyof RestaurantConfig, value: number) => {
@@ -171,13 +173,6 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
 
   const content = (
     <Box>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <Settings color="primary" sx={{ mr: 1 }} />
-        <Typography variant="h5" fontWeight="600">
-          Configuración del Restaurante
-        </Typography>
-      </Box>
-
       {!config && !loading && (
         <Alert severity="info" sx={{ mb: 3 }}>
           No se encontró configuración del restaurante. Esto debería haberse configurado durante el primer inicio de sesión.
@@ -238,7 +233,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
             </Box>
           </Box>
 
-          <Paper variant="outlined" sx={{ p: 3 }}>
+          <Paper variant="outlined" sx={{ p: { xs: 2, sm: 3 } }}>
             {/* Nombre del negocio */}
             <Box sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -247,8 +242,8 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   Información del Negocio
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ flex: '1 1 400px', minWidth: '300px' }}>
+              <Box sx={{ display: 'flex', gap: { xs: 1.5, sm: 2 }, flexWrap: 'wrap' }}>
+                <Box sx={{ flex: '1 1 100%', minWidth: 0 }}>
                   <TextField
                     fullWidth
                     label="Nombre del negocio"
@@ -272,8 +267,13 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   Salón Principal
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 1.5, sm: 2 }, 
+                flexWrap: 'wrap',
+                flexDirection: { xs: 'column', sm: 'row' }
+              }}>
+                <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 250px' }, minWidth: 0 }}>
                   <TextField
                     fullWidth
                     label="Número de mesas de salón"
@@ -283,10 +283,9 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     error={!!errors.salonTables}
                     helperText={errors.salonTables}
                     inputProps={{ min: 1 }}
-                    sx={{ maxWidth: 300 }}
                   />
                 </Box>
-                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 250px' }, minWidth: 0 }}>
                   <TextField
                     fullWidth
                     label="Capacidad total del salón (personas)"
@@ -315,8 +314,13 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   (opcional)
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 1.5, sm: 2 }, 
+                flexWrap: 'wrap',
+                flexDirection: { xs: 'column', sm: 'row' }
+              }}>
+                <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 250px' }, minWidth: 0 }}>
                   <TextField
                     fullWidth
                     label="Número de mesas altas"
@@ -326,7 +330,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     inputProps={{ min: 0 }}
                   />
                 </Box>
-                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 250px' }, minWidth: 0 }}>
                   <TextField
                     fullWidth
                     label="Capacidad de mesas altas"
@@ -354,8 +358,13 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   (opcional)
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 1.5, sm: 2 }, 
+                flexWrap: 'wrap',
+                flexDirection: { xs: 'column', sm: 'row' }
+              }}>
+                <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 250px' }, minWidth: 0 }}>
                   <TextField
                     fullWidth
                     label="Número de mesas de terraza"
@@ -365,7 +374,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                     inputProps={{ min: 0 }}
                   />
                 </Box>
-                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+                <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 250px' }, minWidth: 0 }}>
                   <TextField
                     fullWidth
                     label="Capacidad de terraza"
@@ -393,8 +402,13 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
                   (opcional)
                 </Typography>
               </Box>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ flex: '1 1 250px', minWidth: '200px' }}>
+              <Box sx={{ 
+                display: 'flex', 
+                gap: { xs: 1.5, sm: 2 }, 
+                flexWrap: 'wrap',
+                flexDirection: { xs: 'column', sm: 'row' }
+              }}>
+                <Box sx={{ flex: { xs: '1 1 100%', sm: '1 1 250px' }, minWidth: 0 }}>
                   <TextField
                     fullWidth
                     label="Plazas en la barra"
@@ -409,25 +423,7 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
 
             <Divider sx={{ my: 3 }} />
 
-            {/* Always show save/cancel buttons - removed editing condition */}
-              <Box sx={{ mt: 3, display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
-                <Button
-                  variant="outlined"
-                  onClick={handleCancel}
-                  startIcon={<Cancel />}
-                  disabled={loading}
-                >
-                  Cancelar
-                </Button>
-                <Button
-                  variant="contained"
-                  onClick={handleSave}
-                  startIcon={loading ? <CircularProgress size={20} /> : <Save />}
-                  disabled={loading}
-                >
-                  {loading ? 'Guardando...' : 'Guardar cambios'}
-                </Button>
-              </Box>
+
           </Paper>
         </>
       )}
@@ -441,21 +437,63 @@ const RestaurantSettings: React.FC<RestaurantSettingsProps> = ({
       onClose={onClose || (() => {})}
       maxWidth="md"
       fullWidth
+      fullScreen={false} // Prevent fullscreen on mobile for better UX
       PaperProps={{
-        sx: { borderRadius: 2 }
+        sx: { 
+          borderRadius: { xs: 0, sm: 2 }, // No border radius on mobile
+          margin: { xs: 1, sm: 2 }, // Reduced margin on mobile
+          width: { xs: 'calc(100% - 16px)', sm: 'auto' }, // Full width with small margins on mobile
+          maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' } // Constrain height on mobile
+        }
       }}
     >
-      <DialogTitle>
+      <DialogTitle sx={{ pb: { xs: 1, sm: 2 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Settings color="primary" />
-          Configuración del Restaurante
+          <Box sx={{ 
+            fontSize: { xs: '1.1rem', sm: '1.25rem' },
+            fontWeight: 600 
+          }}>
+            Configuración del Restaurante
+          </Box>
         </Box>
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
         {content}
       </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cerrar</Button>
+      <DialogActions sx={{ 
+        px: { xs: 2, sm: 3 }, 
+        pb: { xs: 2, sm: 3 },
+        pt: { xs: 1, sm: 2 },
+        gap: { xs: 1.5, sm: 1 },
+        flexDirection: { xs: 'column-reverse', sm: 'row' },
+        borderTop: '1px solid',
+        borderColor: 'divider'
+      }}>
+        <Button
+          onClick={handleCancel}
+          startIcon={<Cancel />}
+          disabled={loading}
+          variant="outlined"
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { sm: 120 }
+          }}
+        >
+          Cancelar
+        </Button>
+        <Button
+          variant="contained"
+          onClick={handleSave}
+          startIcon={loading ? <CircularProgress size={20} /> : <Save />}
+          disabled={loading}
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { sm: 140 }
+          }}
+        >
+          {loading ? 'Guardando...' : 'Guardar cambios'}
+        </Button>
       </DialogActions>
     </Dialog>
   );

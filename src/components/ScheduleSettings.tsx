@@ -7,11 +7,11 @@ import {
   Button,
   Box,
   Typography,
-  CircularProgress,
   Alert,
   Divider,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  CircularProgress
 } from '@mui/material';
 import { Schedule, Save, Cancel } from '@mui/icons-material';
 import SimplifiedScheduleConfig, { SimplifiedSchedule } from './SimplifiedScheduleConfig';
@@ -150,6 +150,7 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
         callRedirectionSchedule
       };
       onUpdate(updatedConfig);
+      onClose?.(); // Close the popup after saving
     }
   };
 
@@ -171,22 +172,33 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="lg"
+      maxWidth="md"
       fullWidth
+      fullScreen={false}
       PaperProps={{
-        sx: { borderRadius: 2 }
+        sx: { 
+          borderRadius: { xs: 0, sm: 2 },
+          margin: { xs: 1, sm: 2 },
+          width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+          maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' }
+        }
       }}
     >
-      <DialogTitle>
+      <DialogTitle sx={{ pb: { xs: 1, sm: 2 } }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <Schedule color="primary" />
-          Configuración de Horarios
+          <Box sx={{ 
+            fontSize: { xs: '1.1rem', sm: '1.25rem' },
+            fontWeight: 600 
+          }}>
+            Configuración de Horarios
+          </Box>
         </Box>
       </DialogTitle>
       
-      <DialogContent>
+      <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
         <Box sx={{ py: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 2, sm: 3 } }}>
             Configura los horarios de tu restaurante para reservas y redirección de llamadas
           </Typography>
 
@@ -241,11 +253,24 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
         </Box>
       </DialogContent>
 
-      <DialogActions sx={{ px: 3, pb: 2 }}>
+      <DialogActions sx={{ 
+        px: { xs: 2, sm: 3 }, 
+        pb: { xs: 2, sm: 3 },
+        pt: { xs: 1, sm: 2 },
+        gap: { xs: 1.5, sm: 1 },
+        flexDirection: { xs: 'column-reverse', sm: 'row' },
+        borderTop: '1px solid',
+        borderColor: 'divider'
+      }}>
         <Button
           onClick={handleCancel}
           startIcon={<Cancel />}
           disabled={loading}
+          variant="outlined"
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { sm: 120 }
+          }}
         >
           Cancelar
         </Button>
@@ -254,8 +279,12 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
           onClick={handleSave}
           startIcon={loading ? <CircularProgress size={20} /> : <Save />}
           disabled={loading}
+          sx={{ 
+            width: { xs: '100%', sm: 'auto' },
+            minWidth: { sm: 140 }
+          }}
         >
-          {loading ? 'Guardando...' : 'Guardar Horarios'}
+          {loading ? 'Guardando...' : 'Guardar cambios'}
         </Button>
       </DialogActions>
     </Dialog>

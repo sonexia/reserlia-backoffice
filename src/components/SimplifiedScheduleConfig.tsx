@@ -8,6 +8,7 @@ import {
   CardContent,
   TextField,
   IconButton,
+  Button,
   Alert
 } from '@mui/material';
 import { Add, Remove, AccessTime } from '@mui/icons-material';
@@ -150,7 +151,7 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
     
     return (
       <Card key={groupKey} sx={{ mb: 2 }}>
-        <CardContent>
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
             <AccessTime sx={{ mr: 1, color: 'primary.main' }} />
             <Box sx={{ flexGrow: 1 }}>
@@ -175,28 +176,45 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
           {group.enabled && (
             <>
               {group.ranges.map((range, index) => (
-                <Box key={index} sx={{ mb: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <TextField
-                    type="time"
-                    label="Desde"
-                    value={range.start}
-                    onChange={(e) => updateTimeRange(groupKey, index, 'start', e.target.value)}
-                    sx={{ flex: 1 }}
-                    inputProps={{ step: 300 }}
-                  />
-                  <TextField
-                    type="time"
-                    label="Hasta"
-                    value={range.end}
-                    onChange={(e) => updateTimeRange(groupKey, index, 'end', e.target.value)}
-                    sx={{ flex: 1 }}
-                    inputProps={{ step: 300 }}
-                  />
+                <Box key={index} sx={{ 
+                  mb: 2, 
+                  display: 'flex', 
+                  gap: { xs: 1.5, sm: 2 }, 
+                  alignItems: { xs: 'stretch', sm: 'center' },
+                  flexDirection: { xs: 'column', sm: 'row' }
+                }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    gap: { xs: 1.5, sm: 2 }, 
+                    flex: 1,
+                    alignItems: 'center'
+                  }}>
+                    <TextField
+                      type="time"
+                      label="Desde"
+                      value={range.start}
+                      onChange={(e) => updateTimeRange(groupKey, index, 'start', e.target.value)}
+                      sx={{ flex: 1 }}
+                      inputProps={{ step: 300 }}
+                    />
+                    <TextField
+                      type="time"
+                      label="Hasta"
+                      value={range.end}
+                      onChange={(e) => updateTimeRange(groupKey, index, 'end', e.target.value)}
+                      sx={{ flex: 1 }}
+                      inputProps={{ step: 300 }}
+                    />
+                  </Box>
                   {group.ranges.length > 1 && (
                     <IconButton
                       onClick={() => removeTimeRange(groupKey, index)}
                       color="error"
                       size="small"
+                      sx={{ 
+                        alignSelf: { xs: 'center', sm: 'auto' },
+                        mt: { xs: 0, sm: 0 }
+                      }}
                     >
                       <Remove />
                     </IconButton>
@@ -204,13 +222,15 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
                 </Box>
               ))}
               
-              <IconButton
+              <Button
                 onClick={() => addTimeRange(groupKey)}
                 color="primary"
+                startIcon={<Add />}
+                size="small"
                 sx={{ mt: 1 }}
               >
-                <Add /> Añadir horario
-              </IconButton>
+                Añadir horario
+              </Button>
 
               {/* Individual weekday toggles for weekdays group only */}
               {isWeekdaysGroup && (
@@ -222,7 +242,12 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
                     Puedes desactivar días específicos (ej: cerrado los lunes)
                   </Typography>
                   
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: { xs: 0.5, sm: 1 },
+                    flexDirection: { xs: 'column', sm: 'row' }
+                  }}>
                     {(['monday', 'tuesday', 'wednesday', 'thursday', 'friday'] as const).map((day) => (
                       <FormControlLabel
                         key={day}
@@ -234,7 +259,11 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
                           />
                         }
                         label={dayNames[day]}
-                        sx={{ m: 0, minWidth: 'auto' }}
+                        sx={{ 
+                          m: 0, 
+                          minWidth: { xs: '100%', sm: 'auto' },
+                          width: { xs: '100%', sm: 'auto' }
+                        }}
                       />
                     ))}
                   </Box>

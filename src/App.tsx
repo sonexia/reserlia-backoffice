@@ -241,22 +241,42 @@ function App() {
                 </Box>
               </Box>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {/* Restaurant name and assigned phone display */}
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+              flexWrap: { xs: 'wrap', sm: 'nowrap' },
+              minWidth: 0
+            }}>
+              {/* Restaurant name and assigned phone display - hide on mobile */}
               {config?.businessName && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
+                <Box sx={{
+                  display: { xs: 'none', sm: 'flex' },
+                  alignItems: 'center',
+                  gap: 1,
+                  mr: 2,
+                  minWidth: 0
+                }}>
                   <Box sx={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: 1,
-                    px: 2,
-                    py: 1,
+                    px: { xs: 1.25, sm: 2 },
+                    py: { xs: 0.5, sm: 1 },
                     bgcolor: 'rgba(0, 201, 167, 0.1)',
                     borderRadius: 2,
                     border: '1px solid rgba(0, 201, 167, 0.2)'
                   }}>
                     <Restaurant sx={{ fontSize: 20, color: 'primary.main' }} />
-                    <Box sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary' }}>
+                    <Box sx={{
+                      fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+                      fontWeight: 600,
+                      color: 'text.primary',
+                      maxWidth: { xs: 140, sm: 'none' },
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
                       {config.businessName}
                     </Box>
                   </Box>
@@ -264,17 +284,25 @@ function App() {
                     display: 'flex', 
                     alignItems: 'center', 
                     gap: 1,
-                    px: 2,
-                    py: 1,
+                    px: { xs: 1.25, sm: 2 },
+                    py: { xs: 0.5, sm: 1 },
                     bgcolor: 'rgba(0,  0, 0, 0.04)',
                     borderRadius: 2,
                     border: '1px solid rgba(0,0,0,0.08)'
                   }}>
                     <Call sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary', display: { xs: 'none', sm: 'block' } }}>
                       Número de teléfono de la centralita:
                     </Box>
-                    <Box sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary' }}>
+                    <Box sx={{
+                      fontSize: { xs: '0.8125rem', sm: '0.875rem' },
+                      fontWeight: 600,
+                      color: 'text.primary',
+                      maxWidth: { xs: 120, sm: 'none' },
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis'
+                    }}>
                       {config.assignedPhoneNumber || 'Número de teléfono no asignado aún'}
                     </Box>
                   </Box>
@@ -299,6 +327,33 @@ function App() {
                 anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
                 className="reserlia-menu"
               >
+                {/* Restaurant info section - shown on all screens */}
+                {config?.businessName && (
+                  <Box sx={{ px: 2, py: 1.5, borderBottom: '1px solid #e5e7eb', mb: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                      <Restaurant sx={{ fontSize: 18, color: 'primary.main' }} />
+                      <Box sx={{ 
+                        fontSize: '0.875rem', 
+                        fontWeight: 600, 
+                        color: 'text.primary',
+                        lineHeight: 1.2
+                      }}>
+                        {config.businessName}
+                      </Box>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Call sx={{ fontSize: 16, color: 'text.secondary' }} />
+                      <Box sx={{ 
+                        fontSize: '0.75rem', 
+                        color: 'text.secondary',
+                        lineHeight: 1.2
+                      }}>
+                        {config.assignedPhoneNumber || 'Sin número asignado'}
+                      </Box>
+                    </Box>
+                  </Box>
+                )}
+                
                 <MenuItem onClick={handleOpenBillingPortal}>
                   <ListItemIcon>
                     <CreditCard fontSize="small" />
@@ -335,8 +390,15 @@ function App() {
         </AppBar>
 
         {/* Contenido principal */}
-        <Container maxWidth="xl" sx={{ py: 4 }}>
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Container maxWidth="xl" sx={{ py: { xs: 2, sm: 4 } }}>
+          <Box sx={{
+            mb: 3,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: { xs: 'stretch', sm: 'center' },
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: { xs: 1.5, sm: 0 }
+          }}>
             <Box>
               <Box sx={{ fontSize: '1.5rem', fontWeight: 600, color: 'text.primary', mb: 0.5 }}>
                 Reservas
@@ -348,7 +410,7 @@ function App() {
             <Button 
               variant="contained" 
               onClick={() => setModalOpen(true)}
-              sx={{ borderRadius: 2, px: 3 }}
+              sx={{ borderRadius: 2, px: 3, width: { xs: '100%', sm: 'auto' } }}
             >
               + Nueva reserva
             </Button>

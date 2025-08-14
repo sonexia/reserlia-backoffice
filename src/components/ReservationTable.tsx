@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { MaterialReactTable, type MRT_ColumnDef } from "material-react-table";
-import { IconButton } from "@mui/material";
+import { IconButton, useMediaQuery } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { LocalizationProvider } from "@mui/x-date-pickers";
@@ -15,6 +16,8 @@ export interface ReservationTableProps {
 }
 
 export default function ReservationTable({ reservations, onEdit, onDelete, timezone = 'Europe/Madrid' }: ReservationTableProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const columns = useMemo<MRT_ColumnDef<Schema["Reservation"]["type"]>[]>(
     () => [
       {
@@ -68,12 +71,35 @@ export default function ReservationTable({ reservations, onEdit, onDelete, timez
       <MaterialReactTable
         columns={columns}
         data={reservations}
-        enableGlobalFilter
-        enableColumnFilters
+        enableGlobalFilter={!isMobile}
+        enableColumnFilters={!isMobile}
         enableRowActions
         positionActionsColumn="last"
-        initialState={{ pagination: { pageSize: 10, pageIndex: 0 } }}
+        initialState={{
+          pagination: { pageSize: 10, pageIndex: 0 },
+          ...(isMobile
+            ? {
+                density: 'compact',
+                columnVisibility: {
+                  // Mostrar cliente y teléfono en móvil
+                  phoneNumber: true,
+                  // Ocultar columnas menos críticas
+                  partySize: false,
+                  tableNumber: false,
+                  notes: false,
+                },
+              }
+            : {}),
+        }}
         muiTablePaperProps={{ elevation: 0 }}
+        muiTableContainerProps={{
+          sx: {
+            overflowX: 'auto',
+          },
+        }}
+        // Simplificar la toolbar en pantallas pequeñas
+        enableFullScreenToggle={!isMobile}
+        enableDensityToggle={!isMobile}
         renderRowActions={({ row }) => (
           <>
             <IconButton
