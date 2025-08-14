@@ -38,6 +38,7 @@ import {
 // Importamos la interfaz RestaurantConfig del hook para mantener consistencia
 import { RestaurantConfig } from '../hooks/useRestaurantConfig';
 import SimplifiedScheduleConfig, { SimplifiedSchedule } from './SimplifiedScheduleConfig';
+import { detectAndMapTimezone } from '../utils/timezoneUtils';
 
 // Nota: Los tipos para horarios simplificados ahora se importan desde SimplifiedScheduleConfig
 
@@ -119,6 +120,8 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     // Configuración de margen de reserva
     minTimeForReservations: undefined,
     actionDuringReservationGracePeriod: 'DISCARD',
+    // Timezone detectado automáticamente del navegador
+    timezone: detectAndMapTimezone(),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});

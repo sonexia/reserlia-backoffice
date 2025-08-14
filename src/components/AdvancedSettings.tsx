@@ -270,17 +270,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                     native: true,
                   }}
                 >
-                  <option value="Europe/Madrid">Europa/Madrid (CET/CEST)</option>
-                  <option value="Europe/London">Europa/Londres (GMT/BST)</option>
-                  <option value="Europe/Paris">Europa/París (CET/CEST)</option>
-                  <option value="Europe/Berlin">Europa/Berlín (CET/CEST)</option>
-                  <option value="Europe/Rome">Europa/Roma (CET/CEST)</option>
-                  <option value="America/New_York">América/Nueva York (EST/EDT)</option>
-                  <option value="America/Los_Angeles">América/Los Ángeles (PST/PDT)</option>
-                  <option value="America/Mexico_City">América/Ciudad de México (CST/CDT)</option>
-                  <option value="America/Buenos_Aires">América/Buenos Aires (ART)</option>
-                  <option value="Asia/Tokyo">Asia/Tokio (JST)</option>
-                  <option value="Australia/Sydney">Australia/Sídney (AEST/AEDT)</option>
+                  <option value="Europe/Madrid">España peninsular (CET/CEST)</option>
+                  <option value="Atlantic/Canary">España Canarias (WET/WEST)</option>
                 </TextField>
               </Box>
             </CardContent>
