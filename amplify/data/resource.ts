@@ -53,6 +53,10 @@ const schema = a.schema({
       reservationDuration: a.integer().default(120), // Tiempo de reserva en minutos (tiempo para comer)
       timezone: a.string().default('Europe/Madrid'), // Zona horaria del restaurante
 
+      // Configuración de margen de reserva
+      minTimeForReservations: a.integer(), // Tiempo mínimo de antelación para reservas (en minutos)
+      actionDuringGracePeriod: a.enum(['DISCARD', 'REDIRECT']), // Acción a tomar durante el período de gracia
+
       // Suscripción Stripe
       subscriptionStatus: a.enum(['none', 'active', 'past_due', 'canceled']),
       stripeCustomerId: a.string(),

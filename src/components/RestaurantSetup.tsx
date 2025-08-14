@@ -78,11 +78,21 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     depositAmount: '',
     maxDinersPerBot: '6',
     reservationDuration: '120',
+    minTimeForReservations: '15',
   });
 
   // Schedule states
   const [reservationSchedule, setReservationSchedule] = useState<SimplifiedSchedule>(createDefaultSchedule());
   const [callRedirectionSchedule, setCallRedirectionSchedule] = useState<SimplifiedSchedule>(createDefaultSchedule());
+  // Mantener opción de "Mismo que el horario de reservas" para redirección de llamadas
+  const [sameCallsAsReservations, setSameCallsAsReservations] = useState<boolean>(true);
+
+  // Sincronizar automáticamente cuando la opción está activa
+  useEffect(() => {
+    if (sameCallsAsReservations) {
+      setCallRedirectionSchedule(reservationSchedule);
+    }
+  }, [sameCallsAsReservations, reservationSchedule]);
 
   // Estado real del config con valores numéricos
   const [config, setConfig] = useState<Omit<RestaurantConfig, 'id'>>({
@@ -106,9 +116,15 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     callRedirectionSchedule: createDefaultSchedule(),
     maxDinersPerBot: 6,
     reservationDuration: 120,
+    // Configuración de margen de reserva
+    minTimeForReservations: undefined,
+    actionDuringGracePeriod: 'DISCARD',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Estado local para el checkbox de margen de reserva
+  const [enableReservationMargin, setEnableReservationMargin] = useState(false);
 
   // Auto-populate business name from Cognito user attributes
   useEffect(() => {
@@ -277,6 +293,10 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     // Manejar campos decimales (como depositAmount)
     if (field === 'depositAmount') {
       const numValue = value === '' ? undefined : parseFloat(value);
+      setConfig(prev => ({ ...prev, [field]: numValue }));
+    } else if (field === 'minTimeForReservations') {
+      // Campo opcional de margen de reserva - permitir campo vacío
+      const numValue = value === '' ? undefined : parseInt(value);
       setConfig(prev => ({ ...prev, [field]: numValue }));
     } else {
       // Campos enteros
@@ -524,13 +544,37 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
 
                 {/* Paso 4: Horarios de redirección de llamadas */}
                 {index === 3 && (
-                  <SimplifiedScheduleConfig
-                    title="Horarios de Redirección de Llamadas"
-                    description="Configure los horarios en los que las llamadas serán redirigidas a una persona responsable en lugar del bot."
-                    schedule={callRedirectionSchedule}
-                    onChange={setCallRedirectionSchedule}
-                    error={errors.callRedirectionSchedule}
-                  />
+                  <Box>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={sameCallsAsReservations}
+                          onChange={(e) => {
+                            const checked = e.target.checked;
+                            setSameCallsAsReservations(checked);
+                            if (checked) {
+                              setCallRedirectionSchedule(reservationSchedule);
+                            }
+                          }}
+                        />
+                      }
+                      label="Mismo que el horario de reservas"
+                    />
+
+                    {sameCallsAsReservations ? (
+                      <Alert severity="info" sx={{ mt: 1 }}>
+                        Usando el mismo horario que el de reservas. Desactiva la opción para personalizar este horario.
+                      </Alert>
+                    ) : (
+                      <SimplifiedScheduleConfig
+                        title="Horarios de Redirección de Llamadas"
+                        description="Configure los horarios en los que las llamadas serán redirigidas a una persona responsable en lugar del bot."
+                        schedule={callRedirectionSchedule}
+                        onChange={setCallRedirectionSchedule}
+                        error={errors.callRedirectionSchedule}
+                      />
+                    )}
+                  </Box>
                 )}
 
                 {/* Paso 5: Configuración del bot */}
@@ -635,6 +679,104 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                           />
                         </Box>
                       )}
+                    </Box>
+
+                    {/* Configuración de margen de reserva (opcional) */}
+                    <Box>
+                      <Typography variant="h6" sx={{ mb: 2 }}>
+                        Margen de Reserva (Opcional)
+                        <Tooltip title="Configure el tiempo mínimo de antelación para aceptar reservas. Este campo es opcional y puede configurarse más tarde.">
+                          <InfoOutlined sx={{ ml: 1, fontSize: 18, color: 'text.secondary' }} />
+                        </Tooltip>
+                      </Typography>
+                      
+                      <Stack spacing={2}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={enableReservationMargin}
+                              onChange={(e) => {
+                                setEnableReservationMargin(e.target.checked);
+                                if (e.target.checked) {
+                                  // Establecer valores por defecto cuando se habilita
+                                  setInputValues(prev => ({ ...prev, minTimeForReservations: '15' }));
+                                  setConfig(prev => ({
+                                    ...prev,
+                                    minTimeForReservations: 15,
+                                    actionDuringGracePeriod: 'DISCARD'
+                                  }));
+                                } else {
+                                  // Limpiar cuando se deshabilita
+                                  setInputValues(prev => ({ ...prev, minTimeForReservations: '' }));
+                                  setConfig(prev => ({
+                                    ...prev,
+                                    minTimeForReservations: undefined,
+                                    actionDuringGracePeriod: 'DISCARD'
+                                  }));
+                                }
+                              }}
+                            />
+                          }
+                          label="Habilitar margen mínimo de reserva"
+                        />
+                        
+                        {enableReservationMargin && (
+                          <Box sx={{ ml: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, maxWidth: 400 }}>
+                              <TextField
+                                label="Tiempo mínimo de antelación (minutos)"
+                                type="text"
+                                value={inputValues.minTimeForReservations}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  // Permitir solo números
+                                  if (value === '' || /^\d+$/.test(value)) {
+                                    setInputValues(prev => ({ ...prev, minTimeForReservations: value }));
+                                    const numValue = value === '' ? 15 : Math.max(1, parseInt(value) || 1);
+                                    setConfig(prev => ({ ...prev, minTimeForReservations: numValue }));
+                                  }
+                                }}
+                                onBlur={() => {
+                                  if ((inputValues.minTimeForReservations || '').trim() === '') {
+                                    setInputValues(prev => ({ ...prev, minTimeForReservations: '15' }));
+                                    setConfig(prev => ({ ...prev, minTimeForReservations: 15 }));
+                                  } else {
+                                    const parsed = Math.max(1, parseInt(inputValues.minTimeForReservations, 10) || 15);
+                                    setConfig(prev => ({ ...prev, minTimeForReservations: parsed }));
+                                  }
+                                }}
+                                helperText="Por defecto: 15 minutos"
+                                sx={{ flexGrow: 1 }}
+                              />
+                            </Box>
+                            
+                            <FormControl component="fieldset" sx={{ mt: 1 }}>
+                              <FormLabel component="legend">
+                                ¿Qué hacer cuando una reserva no cumple el tiempo mínimo?
+                              </FormLabel>
+                              <RadioGroup
+                                value={config.actionDuringGracePeriod}
+                                onChange={(e) => setConfig(prev => ({ 
+                                  ...prev, 
+                                  actionDuringGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
+                                }))}
+                                sx={{ mt: 1 }}
+                              >
+                                <FormControlLabel
+                                  value="DISCARD"
+                                  control={<Radio />}
+                                  label="Descartar la reserva (informar al cliente que no se puede reservar con tan poca antelación)"
+                                />
+                                <FormControlLabel
+                                  value="REDIRECT"
+                                  control={<Radio />}
+                                  label="Redireccionar a la persona de contacto del restaurante"
+                                />
+                              </RadioGroup>
+                            </FormControl>
+                          </Box>
+                        )}
+                      </Stack>
                     </Box>
 
                     {/* Preguntas adicionales */}

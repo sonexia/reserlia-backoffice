@@ -50,6 +50,11 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
     depositType: 'FIXED_PER_RESERVATION' as 'FIXED_PER_RESERVATION' | 'PER_PERSON',
     depositAmount: undefined as number | undefined,
     
+    // Configuración de margen de reserva
+    enableReservationMargin: false,
+    minTimeForReservations: 15 as number,
+    actionDuringGracePeriod: 'DISCARD' as 'DISCARD' | 'REDIRECT',
+    
     // Preguntas adicionales
     askReservationReason: false,
     askAllergies: false,
@@ -57,6 +62,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // Estado string para permitir vaciar y editar libremente el input sin forzar un número inmediato
+  const [minTimeInput, setMinTimeInput] = useState<string>('15');
 
   // Cargar configuración existente
   useEffect(() => {
@@ -68,10 +75,19 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         requiresDeposit: config.requiresDeposit || false,
         depositType: config.depositType || 'FIXED_PER_RESERVATION',
         depositAmount: config.depositAmount || undefined,
+        enableReservationMargin: Boolean(config.minTimeForReservations),
+        minTimeForReservations: config.minTimeForReservations || 15,
+        actionDuringGracePeriod: config.actionDuringGracePeriod || 'DISCARD',
         askReservationReason: config.askReservationReason || false,
         askAllergies: config.askAllergies || false,
         askFoodType: config.askFoodType || false
       });
+      // Sincronizar el estado string del input
+      setMinTimeInput(
+        config.minTimeForReservations !== undefined && config.minTimeForReservations !== null
+          ? String(config.minTimeForReservations)
+          : ''
+      );
     }
   }, [config]);
 
@@ -94,6 +110,11 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
       }
     }
 
+    // Validar configuración de margen de reserva
+    if (editConfig.enableReservationMargin && editConfig.minTimeForReservations <= 0) {
+      newErrors.minTimeForReservations = 'El tiempo mínimo debe ser mayor a 0 minutos';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -109,6 +130,13 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         requiresDeposit: editConfig.requiresDeposit,
         depositType: editConfig.depositType,
         depositAmount: editConfig.depositAmount,
+        // Si el margen está habilitado y el input está vacío, aplicar por defecto 15 al guardar
+        minTimeForReservations: editConfig.enableReservationMargin
+          ? (minTimeInput.trim() === ''
+              ? 15
+              : Math.max(1, parseInt(minTimeInput, 10) || 15))
+          : undefined,
+        actionDuringGracePeriod: editConfig.enableReservationMargin ? editConfig.actionDuringGracePeriod : undefined,
         askReservationReason: editConfig.askReservationReason,
         askAllergies: editConfig.askAllergies,
         askFoodType: editConfig.askFoodType
@@ -127,6 +155,9 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         requiresDeposit: config.requiresDeposit || false,
         depositType: config.depositType || 'FIXED_PER_RESERVATION',
         depositAmount: config.depositAmount || undefined,
+        enableReservationMargin: Boolean(config.minTimeForReservations),
+        minTimeForReservations: config.minTimeForReservations ?? 15,
+        actionDuringGracePeriod: config.actionDuringGracePeriod || 'DISCARD',
         askReservationReason: config.askReservationReason || false,
         askAllergies: config.askAllergies || false,
         askFoodType: config.askFoodType || false
@@ -291,6 +322,103 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                       inputProps={{ min: 0, step: 0.01 }}
                       sx={{ maxWidth: 300 }}
                     />
+                  </Box>
+                )}
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Configuración de Margen de Reserva */}
+          <Card>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2 }}>
+                Margen de Reserva
+                <Tooltip title="Configure el tiempo mínimo de antelación para aceptar reservas y qué hacer cuando no se cumple">
+                  <IconButton size="small" sx={{ ml: 1 }}>
+                    <Help fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={editConfig.enableReservationMargin}
+                      onChange={(e) => {
+                        setEditConfig(prev => ({ 
+                          ...prev, 
+                          enableReservationMargin: e.target.checked,
+                          minTimeForReservations: e.target.checked
+                            ? (minTimeInput.trim() === '' ? 15 : Math.max(1, parseInt(minTimeInput, 10) || 15))
+                            : prev.minTimeForReservations,
+                          actionDuringGracePeriod: e.target.checked ? 'DISCARD' : prev.actionDuringGracePeriod
+                        }));
+                        // Cuando se habilita, si está vacío, mostrar 15 por defecto; si se deshabilita, mantener lo escrito
+                        if (e.target.checked) {
+                          setMinTimeInput(prev => (prev.trim() === '' ? '15' : prev));
+                        }
+                      }}
+                    />
+                  }
+                  label="Habilitar margen mínimo de reserva"
+                />
+                {editConfig.enableReservationMargin && (
+                  <Box sx={{ ml: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, maxWidth: 300 }}>
+                      <TextField
+                        label="Tiempo mínimo de antelación (minutos)"
+                        type="text"
+                        value={minTimeInput}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || /^\d+$/.test(value)) {
+                            setMinTimeInput(value);
+                          }
+                        }}
+                        onBlur={() => {
+                          if (minTimeInput.trim() === '') {
+                            // Si se deja vacío al salir, fijar 15 pero mantener el margen habilitado
+                            setMinTimeInput('15');
+                            setEditConfig(prev => ({ ...prev, minTimeForReservations: 15 }));
+                          } else {
+                            const parsed = Math.max(1, parseInt(minTimeInput, 10) || 15);
+                            setEditConfig(prev => ({ ...prev, minTimeForReservations: parsed }));
+                          }
+                        }}
+                        error={Boolean(errors.minTimeForReservations)}
+                        helperText={errors.minTimeForReservations || "Por defecto: 15 minutos"}
+                        sx={{ flexGrow: 1 }}
+                      />
+                    </Box>
+                  </Box>
+                )}
+
+                {editConfig.enableReservationMargin && (
+                  <Box>
+                    <FormControl component="fieldset" sx={{ mt: 1 }}>
+                      <FormLabel component="legend">
+                        ¿Qué hacer cuando una reserva no cumple el tiempo mínimo?
+                      </FormLabel>
+                      <RadioGroup
+                        value={editConfig.actionDuringGracePeriod}
+                        onChange={(e) => setEditConfig(prev => ({ 
+                          ...prev, 
+                          actionDuringGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
+                        }))}
+                      >
+                        <FormControlLabel
+                          value="DISCARD"
+                          control={<Radio />}
+                          label="Descartar la reserva (informar al cliente que no se puede reservar con tan poca antelación)"
+                        />
+                        <FormControlLabel
+                          value="REDIRECT"
+                          control={<Radio />}
+                          label="Redireccionar a la persona de contacto del restaurante"
+                        />
+                      </RadioGroup>
+                    </FormControl>
                   </Box>
                 )}
               </Box>

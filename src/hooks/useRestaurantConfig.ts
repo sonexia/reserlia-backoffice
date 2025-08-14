@@ -61,6 +61,9 @@ export const useRestaurantConfig = () => {
           maxDinersPerBot: restaurantConfig.maxDinersPerBot !== null ? restaurantConfig.maxDinersPerBot : undefined,
           reservationDuration: restaurantConfig.reservationDuration !== null ? restaurantConfig.reservationDuration : undefined,
           timezone: restaurantConfig.timezone || 'Europe/Madrid',
+          // Configuración de margen de reserva
+          minTimeForReservations: restaurantConfig.minTimeForReservations !== null ? restaurantConfig.minTimeForReservations : undefined,
+          actionDuringGracePeriod: restaurantConfig.actionDuringGracePeriod || undefined,
           // Suscripción
           subscriptionStatus: restaurantConfig.subscriptionStatus ?? undefined,
           stripeCustomerId: restaurantConfig.stripeCustomerId ?? undefined,
@@ -141,6 +144,9 @@ export const useRestaurantConfig = () => {
             maxDinersPerBot: data.maxDinersPerBot || 6,
             reservationDuration: data.reservationDuration || 120,
             timezone: data.timezone || 'Europe/Madrid',
+            // Configuración de margen de reserva
+            minTimeForReservations: data.minTimeForReservations !== null ? data.minTimeForReservations : undefined,
+            actionDuringGracePeriod: data.actionDuringGracePeriod || undefined,
             // Suscripción
             subscriptionStatus: data.subscriptionStatus || 'none',
             stripeCustomerId: data.stripeCustomerId || undefined,
