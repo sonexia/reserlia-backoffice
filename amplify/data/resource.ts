@@ -55,7 +55,10 @@ const schema = a.schema({
 
       // Configuración de margen de reserva
       minTimeForReservations: a.integer(), // Tiempo mínimo de antelación para reservas (en minutos)
-      actionDuringGracePeriod: a.enum(['DISCARD', 'REDIRECT']), // Acción a tomar durante el período de gracia
+      actionDuringReservationGracePeriod: a.enum(['DISCARD', 'REDIRECT']), // Acción a tomar durante el período de gracia
+
+      // Datos externos (establecidos por otros flujos)
+      assignedPhoneNumber: a.string(), // Número de teléfono asignado a la centralita (opcional)
 
       // Suscripción Stripe
       subscriptionStatus: a.enum(['none', 'active', 'past_due', 'canceled']),

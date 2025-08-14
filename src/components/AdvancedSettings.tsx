@@ -53,7 +53,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
     // Configuración de margen de reserva
     enableReservationMargin: false,
     minTimeForReservations: 15 as number,
-    actionDuringGracePeriod: 'DISCARD' as 'DISCARD' | 'REDIRECT',
+    actionDuringReservationGracePeriod: 'DISCARD' as 'DISCARD' | 'REDIRECT',
     
     // Preguntas adicionales
     askReservationReason: false,
@@ -77,7 +77,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         depositAmount: config.depositAmount || undefined,
         enableReservationMargin: Boolean(config.minTimeForReservations),
         minTimeForReservations: config.minTimeForReservations || 15,
-        actionDuringGracePeriod: config.actionDuringGracePeriod || 'DISCARD',
+        actionDuringReservationGracePeriod: config.actionDuringReservationGracePeriod || 'DISCARD',
         askReservationReason: config.askReservationReason || false,
         askAllergies: config.askAllergies || false,
         askFoodType: config.askFoodType || false
@@ -136,7 +136,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
               ? 15
               : Math.max(1, parseInt(minTimeInput, 10) || 15))
           : undefined,
-        actionDuringGracePeriod: editConfig.enableReservationMargin ? editConfig.actionDuringGracePeriod : undefined,
+        actionDuringReservationGracePeriod: editConfig.enableReservationMargin ? editConfig.actionDuringReservationGracePeriod : undefined,
         askReservationReason: editConfig.askReservationReason,
         askAllergies: editConfig.askAllergies,
         askFoodType: editConfig.askFoodType
@@ -157,7 +157,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         depositAmount: config.depositAmount || undefined,
         enableReservationMargin: Boolean(config.minTimeForReservations),
         minTimeForReservations: config.minTimeForReservations ?? 15,
-        actionDuringGracePeriod: config.actionDuringGracePeriod || 'DISCARD',
+        actionDuringReservationGracePeriod: config.actionDuringReservationGracePeriod || 'DISCARD',
         askReservationReason: config.askReservationReason || false,
         askAllergies: config.askAllergies || false,
         askFoodType: config.askFoodType || false
@@ -352,7 +352,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                           minTimeForReservations: e.target.checked
                             ? (minTimeInput.trim() === '' ? 15 : Math.max(1, parseInt(minTimeInput, 10) || 15))
                             : prev.minTimeForReservations,
-                          actionDuringGracePeriod: e.target.checked ? 'DISCARD' : prev.actionDuringGracePeriod
+                          actionDuringReservationGracePeriod: e.target.checked ? 'DISCARD' : prev.actionDuringReservationGracePeriod
                         }));
                         // Cuando se habilita, si está vacío, mostrar 15 por defecto; si se deshabilita, mantener lo escrito
                         if (e.target.checked) {
@@ -401,10 +401,10 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                         ¿Qué hacer cuando una reserva no cumple el tiempo mínimo?
                       </FormLabel>
                       <RadioGroup
-                        value={editConfig.actionDuringGracePeriod}
+                        value={editConfig.actionDuringReservationGracePeriod}
                         onChange={(e) => setEditConfig(prev => ({ 
                           ...prev, 
-                          actionDuringGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
+                          actionDuringReservationGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
                         }))}
                       >
                         <FormControlLabel

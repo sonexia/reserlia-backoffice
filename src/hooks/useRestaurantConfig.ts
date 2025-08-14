@@ -7,8 +7,8 @@ const client = generateClient<Schema>();
 
 // Use el tipo generado por Amplify para mayor compatibilidad
 export interface RestaurantConfig extends Omit<Schema["RestaurantConfig"]["type"], 'createdAt' | 'updatedAt'> {
-  // No necesitamos definir propiedades adicionales ya que las heredamos del tipo de Amplify
-  // Omitimos createdAt y updatedAt porque son campos autogenerados que no manipulamos directamente
+  // Campo externo establecido por otro flujo (puede no existir en el esquema de Amplify)
+  assignedPhoneNumber?: string;
 }
 
 export const useRestaurantConfig = () => {
@@ -63,11 +63,13 @@ export const useRestaurantConfig = () => {
           timezone: restaurantConfig.timezone || 'Europe/Madrid',
           // Configuración de margen de reserva
           minTimeForReservations: restaurantConfig.minTimeForReservations !== null ? restaurantConfig.minTimeForReservations : undefined,
-          actionDuringGracePeriod: restaurantConfig.actionDuringGracePeriod || undefined,
+          actionDuringReservationGracePeriod: restaurantConfig.actionDuringReservationGracePeriod || undefined,
           // Suscripción
           subscriptionStatus: restaurantConfig.subscriptionStatus ?? undefined,
           stripeCustomerId: restaurantConfig.stripeCustomerId ?? undefined,
           stripeSubscriptionId: restaurantConfig.stripeSubscriptionId ?? undefined,
+          // Campo externo opcional (puede no venir tipeado en Schema). Accedemos con aserción tipada.
+          assignedPhoneNumber: (restaurantConfig as { assignedPhoneNumber?: string }).assignedPhoneNumber ?? undefined,
         });
       } else {
         setConfig(null);
@@ -112,6 +114,9 @@ export const useRestaurantConfig = () => {
           maxDinersPerBot: newConfig.maxDinersPerBot !== undefined ? newConfig.maxDinersPerBot : null,
           reservationDuration: newConfig.reservationDuration !== undefined ? newConfig.reservationDuration : null,
           timezone: newConfig.timezone || 'Europe/Madrid',
+          // Configuración de margen de reserva
+          minTimeForReservations: newConfig.minTimeForReservations !== undefined ? newConfig.minTimeForReservations : null,
+          actionDuringReservationGracePeriod: newConfig.actionDuringReservationGracePeriod !== undefined ? newConfig.actionDuringReservationGracePeriod : null,
           // Suscripción
           subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
           stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,
@@ -146,7 +151,7 @@ export const useRestaurantConfig = () => {
             timezone: data.timezone || 'Europe/Madrid',
             // Configuración de margen de reserva
             minTimeForReservations: data.minTimeForReservations !== null ? data.minTimeForReservations : undefined,
-            actionDuringGracePeriod: data.actionDuringGracePeriod || undefined,
+            actionDuringReservationGracePeriod: data.actionDuringReservationGracePeriod || undefined,
             // Suscripción
             subscriptionStatus: data.subscriptionStatus || 'none',
             stripeCustomerId: data.stripeCustomerId || undefined,
@@ -179,6 +184,9 @@ export const useRestaurantConfig = () => {
           maxDinersPerBot: newConfig.maxDinersPerBot !== undefined ? newConfig.maxDinersPerBot : null,
           reservationDuration: newConfig.reservationDuration !== undefined ? newConfig.reservationDuration : null,
           timezone: newConfig.timezone || 'Europe/Madrid',
+          // Configuración de margen de reserva
+          minTimeForReservations: newConfig.minTimeForReservations !== undefined ? newConfig.minTimeForReservations : null,
+          actionDuringReservationGracePeriod: newConfig.actionDuringReservationGracePeriod !== undefined ? newConfig.actionDuringReservationGracePeriod : null,
           // Suscripción
           subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
           stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,
@@ -205,6 +213,9 @@ export const useRestaurantConfig = () => {
             askReservationReason: data.askReservationReason || false,
             askAllergies: data.askAllergies || false,
             askFoodType: data.askFoodType || false,
+            // Configuración de margen de reserva
+            minTimeForReservations: data.minTimeForReservations !== null ? data.minTimeForReservations : undefined,
+            actionDuringReservationGracePeriod: data.actionDuringReservationGracePeriod || undefined,
           });
           toast.success('Configuración guardada correctamente');
         }

@@ -118,7 +118,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     reservationDuration: 120,
     // Configuración de margen de reserva
     minTimeForReservations: undefined,
-    actionDuringGracePeriod: 'DISCARD',
+    actionDuringReservationGracePeriod: 'DISCARD',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -703,7 +703,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                                   setConfig(prev => ({
                                     ...prev,
                                     minTimeForReservations: 15,
-                                    actionDuringGracePeriod: 'DISCARD'
+                                    actionDuringReservationGracePeriod: 'DISCARD'
                                   }));
                                 } else {
                                   // Limpiar cuando se deshabilita
@@ -711,7 +711,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                                   setConfig(prev => ({
                                     ...prev,
                                     minTimeForReservations: undefined,
-                                    actionDuringGracePeriod: 'DISCARD'
+                                    actionDuringReservationGracePeriod: 'DISCARD'
                                   }));
                                 }
                               }}
@@ -755,10 +755,10 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                                 ¿Qué hacer cuando una reserva no cumple el tiempo mínimo?
                               </FormLabel>
                               <RadioGroup
-                                value={config.actionDuringGracePeriod}
+                                value={config.actionDuringReservationGracePeriod}
                                 onChange={(e) => setConfig(prev => ({ 
                                   ...prev, 
-                                  actionDuringGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
+                                  actionDuringReservationGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
                                 }))}
                                 sx={{ mt: 1 }}
                               >

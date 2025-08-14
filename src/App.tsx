@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
 import { CssBaseline, AppBar, Toolbar, Box, Button, Container, IconButton, Menu, MenuItem, ListItemIcon, ListItemText, Chip } from '@mui/material';
-import { MoreVert, Logout, CreditCard, Restaurant, Schedule, Tune } from '@mui/icons-material';
+import { MoreVert, Logout, CreditCard, Restaurant, Schedule, Tune, Call } from '@mui/icons-material';
 import ReservationFormModal from "./components/ReservationFormModal";
 import ReservationTable from "./components/ReservationTable";
 import RestaurantSetup from "./components/RestaurantSetup";
@@ -242,26 +242,41 @@ function App() {
               </Box>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-              {/* Restaurant name display */}
+              {/* Restaurant name and assigned phone display */}
               {config?.businessName && (
-                <Box sx={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  gap: 1,
-                  mr: 2,
-                  px: 2,
-                  py: 1,
-                  bgcolor: 'rgba(0, 201, 167, 0.1)',
-                  borderRadius: 2,
-                  border: '1px solid rgba(0, 201, 167, 0.2)'
-                }}>
-                  <Restaurant sx={{ fontSize: 20, color: 'primary.main' }} />
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mr: 2 }}>
                   <Box sx={{ 
-                    fontSize: '0.875rem', 
-                    fontWeight: 600, 
-                    color: 'text.primary' 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1,
+                    px: 2,
+                    py: 1,
+                    bgcolor: 'rgba(0, 201, 167, 0.1)',
+                    borderRadius: 2,
+                    border: '1px solid rgba(0, 201, 167, 0.2)'
                   }}>
-                    {config.businessName}
+                    <Restaurant sx={{ fontSize: 20, color: 'primary.main' }} />
+                    <Box sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary' }}>
+                      {config.businessName}
+                    </Box>
+                  </Box>
+                  <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1,
+                    px: 2,
+                    py: 1,
+                    bgcolor: 'rgba(0,  0, 0, 0.04)',
+                    borderRadius: 2,
+                    border: '1px solid rgba(0,0,0,0.08)'
+                  }}>
+                    <Call sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Box sx={{ fontSize: '0.75rem', color: 'text.secondary' }}>
+                      Número de teléfono de la centralita:
+                    </Box>
+                    <Box sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary' }}>
+                      {config.assignedPhoneNumber || 'Número de teléfono no asignado aún'}
+                    </Box>
                   </Box>
                 </Box>
               )}
