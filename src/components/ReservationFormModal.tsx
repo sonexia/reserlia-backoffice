@@ -118,7 +118,7 @@ export default function ReservationFormModal({
             borderRadius: { xs: 0, sm: 2 }, // No border radius on mobile
             margin: { xs: 1, sm: 2 }, // Reduced margin on mobile
             width: { xs: 'calc(100% - 16px)', sm: 'auto' }, // Full width with small margins on mobile
-            maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' } // Constrain height on mobile
+            maxHeight: { xs: '85vh', sm: '85vh', md: '85vh' } // Constrain height on mobile
           }
         }}
       >
@@ -315,7 +315,7 @@ export default function ReservationFormModal({
           pb: { xs: 2, sm: 3 },
           pt: { xs: 1, sm: 2 },
           gap: { xs: 1.5, sm: 1 },
-          flexDirection: { xs: 'column-reverse', sm: 'row' },
+          flexDirection: 'row',
           borderTop: '1px solid',
           borderColor: 'divider'
         }}>
@@ -341,7 +341,7 @@ export default function ReservationFormModal({
               minWidth: { sm: 140 }
             }}
           >
-            {loading ? 'Guardando...' : 'Guardar cambios'}
+            {loading ? 'Guardando...' : 'Guardar'}
           </Button>
         </DialogActions>
       </Dialog>

@@ -180,7 +180,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
           borderRadius: { xs: 0, sm: 2 },
           margin: { xs: 1, sm: 2 },
           width: { xs: 'calc(100% - 16px)', sm: 'auto' },
-          maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' }
+          // ALTURA REDUCIDA PARA NO CORTARSE EN IPHONE
+          maxHeight: { xs: '85vh', sm: '85vh', md: '85vh' }
         }
       }}
     >
@@ -451,32 +452,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                         }))}
                         sx={{ gap: { xs: 1, sm: 0.5 } }}
                       >
-                        <FormControlLabel
-                          value="DISCARD"
-                          control={<Radio />}
-                          label="Descartar la reserva (informar al cliente que no se puede reservar con tan poca antelación)"
-                          sx={{ 
-                            alignItems: 'flex-start',
-                            '& .MuiFormControlLabel-label': { 
-                              fontSize: { xs: '0.875rem', sm: '1rem' },
-                              lineHeight: 1.4,
-                              mt: 0.25
-                            }
-                          }}
-                        />
-                        <FormControlLabel
-                          value="REDIRECT"
-                          control={<Radio />}
-                          label="Redireccionar a la persona de contacto del restaurante"
-                          sx={{ 
-                            alignItems: 'flex-start',
-                            '& .MuiFormControlLabel-label': { 
-                              fontSize: { xs: '0.875rem', sm: '1rem' },
-                              lineHeight: 1.4,
-                              mt: 0.25
-                            }
-                          }}
-                        />
+                        <FormControlLabel value="DISCARD" control={<Radio />} label="Descartar la reserva" />
+                        <FormControlLabel value="REDIRECT" control={<Radio />} label="Redirigir a WhatsApp" />
                       </RadioGroup>
                     </FormControl>
                   </Box>
@@ -486,7 +463,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
           </Card>
 
           {/* Preguntas Adicionales */}
-          <Card sx={{ mb: 3 }}>
+          <Card sx={{ mb: { xs: 2, sm: 3 } }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Typography variant="h6" sx={{ 
                 mb: 2,
@@ -567,7 +544,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         pb: { xs: 2, sm: 3 },
         pt: { xs: 1, sm: 2 },
         gap: { xs: 1.5, sm: 1 },
-        flexDirection: { xs: 'column-reverse', sm: 'row' },
+        flexDirection: 'row',
         borderTop: '1px solid',
         borderColor: 'divider'
       }}>
@@ -593,7 +570,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
             minWidth: { sm: 140 }
           }}
         >
-          {loading ? 'Guardando...' : 'Guardar cambios'}
+          {loading ? 'Guardando...' : 'Guardar'}
         </Button>
       </DialogActions>
     </Dialog>

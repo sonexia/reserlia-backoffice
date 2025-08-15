@@ -180,7 +180,8 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
           borderRadius: { xs: 0, sm: 2 },
           margin: { xs: 1, sm: 2 },
           width: { xs: 'calc(100% - 16px)', sm: 'auto' },
-          maxHeight: { xs: 'calc(100vh - 32px)', sm: '90vh' }
+          // ALTURA REDUCIDA PARA NO CORTARSE EN IPHONE
+          maxHeight: { xs: '85vh', sm: '85vh', md: '85vh' }
         }
       }}
     >
@@ -240,6 +241,12 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
                 schedule={callRedirectionSchedule}
                 onChange={setCallRedirectionSchedule}
                 error={errors.callRedirectionSchedule}
+                sx={{
+                  borderRadius: { xs: 0, sm: 2 },
+                  margin: { xs: 1, sm: 2 },
+                  width: { xs: 'calc(100% - 16px)', sm: 'auto' },
+                  maxHeight: { xs: '70vh', sm: '80vh', md: '85vh' }
+                }}
               />
             )}
           </Box>
@@ -258,7 +265,7 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
         pb: { xs: 2, sm: 3 },
         pt: { xs: 1, sm: 2 },
         gap: { xs: 1.5, sm: 1 },
-        flexDirection: { xs: 'column-reverse', sm: 'row' },
+        flexDirection: 'row',
         borderTop: '1px solid',
         borderColor: 'divider'
       }}>
@@ -284,7 +291,7 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
             minWidth: { sm: 140 }
           }}
         >
-          {loading ? 'Guardando...' : 'Guardar cambios'}
+          {loading ? 'Guardando...' : 'Guardar'}
         </Button>
       </DialogActions>
     </Dialog>
