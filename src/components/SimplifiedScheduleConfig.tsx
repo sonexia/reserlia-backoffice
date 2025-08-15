@@ -9,7 +9,9 @@ import {
   TextField,
   IconButton,
   Button,
-  Alert
+  Alert,
+  SxProps,
+  Theme
 } from '@mui/material';
 import { Add, Remove, AccessTime } from '@mui/icons-material';
 
@@ -46,6 +48,7 @@ interface SimplifiedScheduleConfigProps {
   schedule: SimplifiedSchedule;
   onChange: (schedule: SimplifiedSchedule) => void;
   error?: string;
+  sx?: SxProps<Theme>;
 }
 
 const dayNames = {
@@ -63,7 +66,8 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
   description,
   schedule,
   onChange,
-  error
+  error,
+  sx
 }) => {
   
   const updateScheduleGroup = (groupKey: 'weekdays' | 'saturday' | 'sunday', updates: Partial<ScheduleGroup>) => {
@@ -279,7 +283,7 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
 
 
   return (
-    <Box>
+    <Box sx={sx}>
       <Alert severity="info" sx={{ mb: 3 }}>
         <Typography variant="body2">
           <strong>{title}</strong><br />
