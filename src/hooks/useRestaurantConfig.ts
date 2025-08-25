@@ -64,6 +64,11 @@ export const useRestaurantConfig = () => {
           // Configuración de margen de reserva
           minTimeForReservations: restaurantConfig.minTimeForReservations !== null ? restaurantConfig.minTimeForReservations : undefined,
           actionDuringReservationGracePeriod: restaurantConfig.actionDuringReservationGracePeriod || undefined,
+          // Teléfono de redirección de llamadas
+          callRedirectionPhone: (restaurantConfig as { callRedirectionPhone?: string | null }).callRedirectionPhone || undefined,
+          // Activación de redirección y teléfono para período de gracia
+          enableCallRedirection: (restaurantConfig as { enableCallRedirection?: boolean | null }).enableCallRedirection ?? false,
+          gracePeriodRedirectPhone: (restaurantConfig as { gracePeriodRedirectPhone?: string | null }).gracePeriodRedirectPhone || undefined,
           // Suscripción
           subscriptionStatus: restaurantConfig.subscriptionStatus ?? undefined,
           stripeCustomerId: restaurantConfig.stripeCustomerId ?? undefined,
@@ -111,12 +116,15 @@ export const useRestaurantConfig = () => {
           // Horarios y configuración del bot
           reservationSchedule: newConfig.reservationSchedule ? JSON.stringify(newConfig.reservationSchedule) : null,
           callRedirectionSchedule: newConfig.callRedirectionSchedule ? JSON.stringify(newConfig.callRedirectionSchedule) : null,
+          enableCallRedirection: newConfig.enableCallRedirection !== undefined ? newConfig.enableCallRedirection : null,
+          callRedirectionPhone: newConfig.callRedirectionPhone ?? null,
           maxDinersPerBot: newConfig.maxDinersPerBot !== undefined ? newConfig.maxDinersPerBot : null,
           reservationDuration: newConfig.reservationDuration !== undefined ? newConfig.reservationDuration : null,
           timezone: newConfig.timezone || 'Europe/Madrid',
           // Configuración de margen de reserva
           minTimeForReservations: newConfig.minTimeForReservations !== undefined ? newConfig.minTimeForReservations : null,
           actionDuringReservationGracePeriod: newConfig.actionDuringReservationGracePeriod !== undefined ? newConfig.actionDuringReservationGracePeriod : null,
+          gracePeriodRedirectPhone: newConfig.gracePeriodRedirectPhone ?? null,
           // Suscripción
           subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
           stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,
@@ -152,6 +160,10 @@ export const useRestaurantConfig = () => {
             // Configuración de margen de reserva
             minTimeForReservations: data.minTimeForReservations !== null ? data.minTimeForReservations : undefined,
             actionDuringReservationGracePeriod: data.actionDuringReservationGracePeriod || undefined,
+            // Teléfono de redirección de llamadas
+            callRedirectionPhone: (data as { callRedirectionPhone?: string | null }).callRedirectionPhone || undefined,
+            enableCallRedirection: (data as { enableCallRedirection?: boolean | null }).enableCallRedirection ?? false,
+            gracePeriodRedirectPhone: (data as { gracePeriodRedirectPhone?: string | null }).gracePeriodRedirectPhone || undefined,
             // Suscripción
             subscriptionStatus: data.subscriptionStatus || 'none',
             stripeCustomerId: data.stripeCustomerId || undefined,
@@ -181,12 +193,15 @@ export const useRestaurantConfig = () => {
           // Horarios y configuración del bot
           reservationSchedule: newConfig.reservationSchedule ? JSON.stringify(newConfig.reservationSchedule) : null,
           callRedirectionSchedule: newConfig.callRedirectionSchedule ? JSON.stringify(newConfig.callRedirectionSchedule) : null,
+          enableCallRedirection: newConfig.enableCallRedirection !== undefined ? newConfig.enableCallRedirection : null,
+          callRedirectionPhone: newConfig.callRedirectionPhone ?? null,
           maxDinersPerBot: newConfig.maxDinersPerBot !== undefined ? newConfig.maxDinersPerBot : null,
           reservationDuration: newConfig.reservationDuration !== undefined ? newConfig.reservationDuration : null,
           timezone: newConfig.timezone || 'Europe/Madrid',
           // Configuración de margen de reserva
           minTimeForReservations: newConfig.minTimeForReservations !== undefined ? newConfig.minTimeForReservations : null,
           actionDuringReservationGracePeriod: newConfig.actionDuringReservationGracePeriod !== undefined ? newConfig.actionDuringReservationGracePeriod : null,
+          gracePeriodRedirectPhone: newConfig.gracePeriodRedirectPhone ?? null,
           // Suscripción
           subscriptionStatus: newConfig.subscriptionStatus !== undefined ? newConfig.subscriptionStatus : null,
           stripeCustomerId: newConfig.stripeCustomerId !== undefined ? newConfig.stripeCustomerId : null,
@@ -216,6 +231,10 @@ export const useRestaurantConfig = () => {
             // Configuración de margen de reserva
             minTimeForReservations: data.minTimeForReservations !== null ? data.minTimeForReservations : undefined,
             actionDuringReservationGracePeriod: data.actionDuringReservationGracePeriod || undefined,
+            // Teléfono de redirección de llamadas
+            callRedirectionPhone: (data as { callRedirectionPhone?: string | null }).callRedirectionPhone || undefined,
+            enableCallRedirection: (data as { enableCallRedirection?: boolean | null }).enableCallRedirection ?? false,
+            gracePeriodRedirectPhone: (data as { gracePeriodRedirectPhone?: string | null }).gracePeriodRedirectPhone || undefined,
           });
           toast.success('Configuración guardada correctamente');
         }

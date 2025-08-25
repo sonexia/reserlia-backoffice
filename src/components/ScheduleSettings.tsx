@@ -13,6 +13,7 @@ import {
   Checkbox,
   CircularProgress
 } from '@mui/material';
+import TextField from '@mui/material/TextField';
 import { Schedule, Save, Cancel } from '@mui/icons-material';
 import SimplifiedScheduleConfig, { SimplifiedSchedule } from './SimplifiedScheduleConfig';
 import { RestaurantConfig } from '../hooks/useRestaurantConfig';
@@ -64,6 +65,8 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
 
   const [useSameSchedule, setUseSameSchedule] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [callRedirectionPhone, setCallRedirectionPhone] = useState<string>('');
+  const [enableCallRedirection, setEnableCallRedirection] = useState<boolean>(false);
 
   // Helper function to check if two schedules are the same
   const schedulesAreEqual = (schedule1: SimplifiedSchedule, schedule2: SimplifiedSchedule): boolean => {
@@ -84,6 +87,12 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
         if (config.reservationSchedule && schedulesAreEqual(config.reservationSchedule as SimplifiedSchedule, callSchedule)) {
           setUseSameSchedule(true);
         }
+      }
+      if (config.callRedirectionPhone) {
+        setCallRedirectionPhone(config.callRedirectionPhone);
+      }
+      if (typeof config.enableCallRedirection === 'boolean') {
+        setEnableCallRedirection(config.enableCallRedirection);
       }
     }
   }, [config]);
@@ -137,6 +146,19 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
       newErrors.callRedirectionSchedule = 'Debe configurar horarios de redirección para al menos un día';
     }
 
+    // Validaciones sólo aplican si la redirección está activada
+    if (enableCallRedirection) {
+      if (!hasCallSchedule) {
+        newErrors.callRedirectionSchedule = 'Debe configurar horarios de redirección para al menos un día';
+      }
+      // Validar número con regex simple
+      const phone = (callRedirectionPhone || '').trim();
+      const simplePhoneRegex = /^[+]?[- 0-9()]{7,}$/; // validación sencilla
+      if (!phone || !simplePhoneRegex.test(phone)) {
+        newErrors.callRedirectionPhone = 'Introduzca un teléfono válido (validación simple)';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -147,7 +169,10 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
       const updatedConfig: Omit<RestaurantConfig, 'id'> = {
         ...config,
         reservationSchedule,
-        callRedirectionSchedule
+        callRedirectionSchedule,
+        // Campo añadido para persistir el teléfono de redirección
+        ...(callRedirectionPhone !== undefined ? { callRedirectionPhone } : {}),
+        enableCallRedirection,
       };
       onUpdate(updatedConfig);
       onClose?.(); // Close the popup after saving
@@ -218,6 +243,19 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
 
           {/* Horarios de Redirección de Llamadas */}
           <Box>
+            {/* Paso 1: ¿Redirigir algunas llamadas o siempre bot? */}
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="subtitle1" sx={{ mb: 1 }}>Atención de llamadas</Typography>
+              <FormControlLabel
+                control={<Checkbox checked={!enableCallRedirection} onChange={(e) => setEnableCallRedirection(!e.target.checked)} />}
+                label="Siempre las atiende el bot"
+              />
+              <FormControlLabel
+                control={<Checkbox checked={enableCallRedirection} onChange={(e) => setEnableCallRedirection(e.target.checked)} />}
+                label="Quiero redirigir algunas llamadas"
+              />
+            </Box>
+
             {/* Checkbox para usar el mismo horario */}
             <Box sx={{ mb: 2 }}>
               <FormControlLabel
@@ -225,6 +263,7 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
                   <Checkbox
                     checked={useSameSchedule}
                     onChange={(e) => handleUseSameScheduleChange(e.target.checked)}
+                    disabled={!enableCallRedirection}
                   />
                 }
                 label="Usar el mismo horario que las reservas"
@@ -234,7 +273,21 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
               </Typography>
             </Box>
 
-            {!useSameSchedule && (
+            {/* Número de teléfono para redirección de llamadas */}
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                label="Número para redirigir llamadas"
+                placeholder="Ej: +34 612 345 678"
+                fullWidth
+                value={callRedirectionPhone}
+                onChange={(e) => setCallRedirectionPhone(e.target.value)}
+                error={Boolean(errors.callRedirectionPhone)}
+                helperText={errors.callRedirectionPhone || 'Se usará este número cuando toque redirigir llamadas'}
+                disabled={!enableCallRedirection}
+              />
+            </Box>
+
+            {enableCallRedirection && !useSameSchedule && (
               <SimplifiedScheduleConfig
                 title="Horarios de Redirección de Llamadas"
                 description="Configura cuándo las llamadas deben ser redirigidas al bot de atención"

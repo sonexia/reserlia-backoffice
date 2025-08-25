@@ -49,6 +49,8 @@ const schema = a.schema({
       // Horarios y configuración del bot
       reservationSchedule: a.json(), // Horarios de reservas por día de la semana
       callRedirectionSchedule: a.json(), // Horarios de redirección de llamadas por día de la semana
+      enableCallRedirection: a.boolean().default(false), // Si está activo, se aplicará la redirección de llamadas
+      callRedirectionPhone: a.string(), // Número al que se redirigirán las llamadas cuando proceda
       maxDinersPerBot: a.integer().default(6), // Número máximo de comensales que atenderá el bot
       reservationDuration: a.integer().default(120), // Tiempo de reserva en minutos (tiempo para comer)
       timezone: a.string().default('Europe/Madrid'), // Zona horaria del restaurante
@@ -56,6 +58,7 @@ const schema = a.schema({
       // Configuración de margen de reserva
       minTimeForReservations: a.integer(), // Tiempo mínimo de antelación para reservas (en minutos)
       actionDuringReservationGracePeriod: a.enum(['DISCARD', 'REDIRECT']), // Acción a tomar durante el período de gracia
+      gracePeriodRedirectPhone: a.string(), // Número al que se redirige durante el período de gracia (si se elige REDIRECT)
 
       // Datos externos (establecidos por otros flujos)
       assignedPhoneNumber: a.string(), // Número de teléfono asignado a la centralita (opcional)

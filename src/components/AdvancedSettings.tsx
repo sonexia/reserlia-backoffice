@@ -64,6 +64,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
   // Estado string para permitir vaciar y editar libremente el input sin forzar un número inmediato
   const [minTimeInput, setMinTimeInput] = useState<string>('15');
+  // Teléfono para redirección durante el período de gracia
+  const [gracePeriodRedirectPhone, setGracePeriodRedirectPhone] = useState<string>('');
 
   // Cargar configuración existente
   useEffect(() => {
@@ -88,6 +90,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
           ? String(config.minTimeForReservations)
           : ''
       );
+      // Cargar teléfono de redirección del período de gracia
+      setGracePeriodRedirectPhone((config as { gracePeriodRedirectPhone?: string | null }).gracePeriodRedirectPhone || '');
     }
   }, [config]);
 
@@ -115,6 +119,15 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
       newErrors.minTimeForReservations = 'El tiempo mínimo debe ser mayor a 0 minutos';
     }
 
+    // Validar teléfono del período de gracia si se elige REDIRECT
+    if (editConfig.enableReservationMargin && editConfig.actionDuringReservationGracePeriod === 'REDIRECT') {
+      const phone = (gracePeriodRedirectPhone || '').trim();
+      const simplePhoneRegex = /^[+]?[- 0-9()]{7,}$/;
+      if (!phone || !simplePhoneRegex.test(phone)) {
+        newErrors.gracePeriodRedirectPhone = 'Introduzca un teléfono válido (validación simple)';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -137,6 +150,10 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
               : Math.max(1, parseInt(minTimeInput, 10) || 15))
           : undefined,
         actionDuringReservationGracePeriod: editConfig.enableReservationMargin ? editConfig.actionDuringReservationGracePeriod : undefined,
+      // Guardar teléfono de redirección del período de gracia cuando aplica
+      gracePeriodRedirectPhone: (editConfig.enableReservationMargin && editConfig.actionDuringReservationGracePeriod === 'REDIRECT')
+        ? (gracePeriodRedirectPhone || undefined)
+        : undefined,
         askReservationReason: editConfig.askReservationReason,
         askAllergies: editConfig.askAllergies,
         askFoodType: editConfig.askFoodType
@@ -163,6 +180,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         askAllergies: config.askAllergies || false,
         askFoodType: config.askFoodType || false
       });
+      setGracePeriodRedirectPhone((config as { gracePeriodRedirectPhone?: string | null }).gracePeriodRedirectPhone || '');
     }
     setErrors({});
     if (onClose) onClose();
@@ -446,15 +464,34 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                       </FormLabel>
                       <RadioGroup
                         value={editConfig.actionDuringReservationGracePeriod}
-                        onChange={(e) => setEditConfig(prev => ({ 
-                          ...prev, 
-                          actionDuringReservationGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
-                        }))}
+                        onChange={(e) => {
+                          const value = e.target.value as 'DISCARD' | 'REDIRECT';
+                          setEditConfig(prev => ({ 
+                            ...prev, 
+                            actionDuringReservationGracePeriod: value 
+                          }));
+                          if (value === 'REDIRECT' && !gracePeriodRedirectPhone && (config?.callRedirectionPhone || '')) {
+                            setGracePeriodRedirectPhone(config!.callRedirectionPhone!);
+                          }
+                        }}
                         sx={{ gap: { xs: 1, sm: 0.5 } }}
                       >
                         <FormControlLabel value="DISCARD" control={<Radio />} label="Descartar la reserva" />
-                        <FormControlLabel value="REDIRECT" control={<Radio />} label="Redirigir a WhatsApp" />
+                        <FormControlLabel value="REDIRECT" control={<Radio />} label="Redireccionar a la persona de contacto del restaurante" />
                       </RadioGroup>
+                      {editConfig.actionDuringReservationGracePeriod === 'REDIRECT' && (
+                        <Box sx={{ mt: 2 }}>
+                          <TextField
+                            label="Número para redirigir durante el período de gracia"
+                            placeholder="Ej: +34 612 345 678"
+                            fullWidth
+                            value={gracePeriodRedirectPhone}
+                            onChange={(e) => setGracePeriodRedirectPhone(e.target.value)}
+                            error={Boolean(errors.gracePeriodRedirectPhone)}
+                            helperText={errors.gracePeriodRedirectPhone || 'Si no se indica, se usará el de redirección general'}
+                          />
+                        </Box>
+                      )}
                     </FormControl>
                   </Box>
                 )}

@@ -87,6 +87,12 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
   const [callRedirectionSchedule, setCallRedirectionSchedule] = useState<SimplifiedSchedule>(createDefaultSchedule());
   // Mantener opción de "Mismo que el horario de reservas" para redirección de llamadas
   const [sameCallsAsReservations, setSameCallsAsReservations] = useState<boolean>(true);
+  // Teléfono para redirección de llamadas
+  const [callRedirectionPhone, setCallRedirectionPhone] = useState<string>('');
+  // Activación de redirección de llamadas (por defecto: siempre BOT)
+  const [enableCallRedirection, setEnableCallRedirection] = useState<boolean>(false);
+  // Teléfono para período de gracia si se redirige
+  const [gracePeriodRedirectPhone, setGracePeriodRedirectPhone] = useState<string>('');
 
   // Sincronizar automáticamente cuando la opción está activa
   useEffect(() => {
@@ -234,19 +240,27 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
         break;
       }
       case 3: { // Horarios de redirección de llamadas
-        // Validar que al menos un grupo tenga horarios configurados y días habilitados
-        const hasCallSchedule = (
-          (callRedirectionSchedule.weekdays.enabled && callRedirectionSchedule.weekdays.ranges.length > 0 && 
-           (callRedirectionSchedule.enabledDays.monday || callRedirectionSchedule.enabledDays.tuesday || 
-            callRedirectionSchedule.enabledDays.wednesday || callRedirectionSchedule.enabledDays.thursday || 
-            callRedirectionSchedule.enabledDays.friday)) ||
-          (callRedirectionSchedule.saturday.enabled && callRedirectionSchedule.saturday.ranges.length > 0 && 
-           callRedirectionSchedule.enabledDays.saturday) ||
-          (callRedirectionSchedule.sunday.enabled && callRedirectionSchedule.sunday.ranges.length > 0 && 
-           callRedirectionSchedule.enabledDays.sunday)
-        );
-        if (!hasCallSchedule) {
-          newErrors.callRedirectionSchedule = 'Debe configurar horarios de redirección para al menos un día';
+        if (enableCallRedirection) {
+          // Validar que al menos un grupo tenga horarios configurados y días habilitados
+          const hasCallSchedule = (
+            (callRedirectionSchedule.weekdays.enabled && callRedirectionSchedule.weekdays.ranges.length > 0 && 
+             (callRedirectionSchedule.enabledDays.monday || callRedirectionSchedule.enabledDays.tuesday || 
+              callRedirectionSchedule.enabledDays.wednesday || callRedirectionSchedule.enabledDays.thursday || 
+              callRedirectionSchedule.enabledDays.friday)) ||
+            (callRedirectionSchedule.saturday.enabled && callRedirectionSchedule.saturday.ranges.length > 0 && 
+             callRedirectionSchedule.enabledDays.saturday) ||
+            (callRedirectionSchedule.sunday.enabled && callRedirectionSchedule.sunday.ranges.length > 0 && 
+             callRedirectionSchedule.enabledDays.sunday)
+          );
+          if (!hasCallSchedule) {
+            newErrors.callRedirectionSchedule = 'Debe configurar horarios de redirección para al menos un día';
+          }
+          // Validar teléfono con regex simple
+          const phone = (callRedirectionPhone || '').trim();
+          const simplePhoneRegex = /^[+]?[- 0-9()]{7,}$/;
+          if (!phone || !simplePhoneRegex.test(phone)) {
+            newErrors.callRedirectionPhone = 'Introduzca un teléfono válido (validación simple)';
+          }
         }
         break;
       }
@@ -256,6 +270,14 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
         }
         if (!config.reservationDuration || config.reservationDuration <= 0) {
           newErrors.reservationDuration = 'El tiempo de reserva debe ser mayor a 0';
+        }
+        // Validación de teléfono para período de gracia cuando se elige REDIRECT
+        if (config.actionDuringReservationGracePeriod === 'REDIRECT') {
+          const phone = (gracePeriodRedirectPhone || '').trim();
+          const simplePhoneRegex = /^[+]?[- 0-9()]{7,}$/;
+          if (!phone || !simplePhoneRegex.test(phone)) {
+            newErrors.gracePeriodRedirectPhone = 'Introduzca un teléfono válido (validación simple)';
+          }
         }
         break;
     }
@@ -283,6 +305,10 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
         callRedirectionSchedule,
         maxDinersPerBot: parseInt(inputValues.maxDinersPerBot) || 6,
         reservationDuration: parseInt(inputValues.reservationDuration) || 120,
+        // Persistir el número de redirección de llamadas
+        callRedirectionPhone: callRedirectionPhone || undefined,
+        enableCallRedirection,
+        gracePeriodRedirectPhone: gracePeriodRedirectPhone || undefined,
       };
       onComplete(finalConfig);
     }
@@ -548,6 +574,27 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                 {/* Paso 4: Horarios de redirección de llamadas */}
                 {index === 3 && (
                   <Box>
+                    {/* Atención de llamadas: BOT siempre vs redirigir algunas */}
+                    <FormControl component="fieldset" sx={{ mb: 1 }}>
+                      <FormLabel component="legend">Atención de llamadas</FormLabel>
+                      <RadioGroup
+                        value={enableCallRedirection ? 'REDIRECT_SOME' : 'ALWAYS_BOT'}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          const enabled = v === 'REDIRECT_SOME';
+                          setEnableCallRedirection(enabled);
+                          if (!enabled) {
+                            // Limpia errores relacionados
+                            setErrors(prev => ({ ...prev, callRedirectionSchedule: '', callRedirectionPhone: '' }));
+                          }
+                        }}
+                        row
+                      >
+                        <FormControlLabel value="ALWAYS_BOT" control={<Radio />} label="Siempre las atiende el bot" />
+                        <FormControlLabel value="REDIRECT_SOME" control={<Radio />} label="Quiero redirigir algunas llamadas" />
+                      </RadioGroup>
+                    </FormControl>
+
                     <FormControlLabel
                       control={
                         <Switch
@@ -559,23 +606,40 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                               setCallRedirectionSchedule(reservationSchedule);
                             }
                           }}
+                          disabled={!enableCallRedirection}
                         />
                       }
                       label="Mismo que el horario de reservas"
                     />
+
+                    {/* Número para redirigir */}
+                    <Box sx={{ mt: 2, mb: 2 }}>
+                      <TextField
+                        label="Número para redirigir llamadas"
+                        placeholder="Ej: +34 612 345 678"
+                        fullWidth
+                        value={callRedirectionPhone}
+                        onChange={(e) => setCallRedirectionPhone(e.target.value)}
+                        error={Boolean(errors.callRedirectionPhone)}
+                        helperText={errors.callRedirectionPhone || 'Se usará este número cuando toque redirigir llamadas'}
+                        disabled={!enableCallRedirection}
+                      />
+                    </Box>
 
                     {sameCallsAsReservations ? (
                       <Alert severity="info" sx={{ mt: 1 }}>
                         Usando el mismo horario que el de reservas. Desactiva la opción para personalizar este horario.
                       </Alert>
                     ) : (
-                      <SimplifiedScheduleConfig
-                        title="Horarios de Redirección de Llamadas"
-                        description="Configure los horarios en los que las llamadas serán redirigidas a una persona responsable en lugar del bot."
-                        schedule={callRedirectionSchedule}
-                        onChange={setCallRedirectionSchedule}
-                        error={errors.callRedirectionSchedule}
-                      />
+                      enableCallRedirection && (
+                        <SimplifiedScheduleConfig
+                          title="Horarios de Redirección de Llamadas"
+                          description="Configure los horarios en los que las llamadas serán redirigidas a una persona responsable en lugar del bot."
+                          schedule={callRedirectionSchedule}
+                          onChange={setCallRedirectionSchedule}
+                          error={errors.callRedirectionSchedule}
+                        />
+                      )
                     )}
                   </Box>
                 )}
@@ -759,10 +823,16 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                               </FormLabel>
                               <RadioGroup
                                 value={config.actionDuringReservationGracePeriod}
-                                onChange={(e) => setConfig(prev => ({ 
-                                  ...prev, 
-                                  actionDuringReservationGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' 
-                                }))}
+                                onChange={(e) => {
+                                  const value = e.target.value as 'DISCARD' | 'REDIRECT';
+                                  setConfig(prev => ({ 
+                                    ...prev, 
+                                    actionDuringReservationGracePeriod: value
+                                  }));
+                                  if (value === 'REDIRECT' && !gracePeriodRedirectPhone && callRedirectionPhone) {
+                                    setGracePeriodRedirectPhone(callRedirectionPhone);
+                                  }
+                                }}
                                 sx={{ mt: 1 }}
                               >
                                 <FormControlLabel
@@ -776,6 +846,19 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                                   label="Redireccionar a la persona de contacto del restaurante"
                                 />
                               </RadioGroup>
+                              {config.actionDuringReservationGracePeriod === 'REDIRECT' && (
+                                <Box sx={{ mt: 2 }}>
+                                  <TextField
+                                    label="Número para redirigir durante el período de gracia"
+                                    placeholder="Ej: +34 612 345 678"
+                                    fullWidth
+                                    value={gracePeriodRedirectPhone}
+                                    onChange={(e) => setGracePeriodRedirectPhone(e.target.value)}
+                                    error={Boolean(errors.gracePeriodRedirectPhone)}
+                                    helperText={errors.gracePeriodRedirectPhone || 'Si no se indica, se usará el de redirección general'}
+                                  />
+                                </Box>
+                              )}
                             </FormControl>
                           </Box>
                         )}
