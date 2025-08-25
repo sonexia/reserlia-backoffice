@@ -231,8 +231,8 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
       }
       case 4: { // Configuración del bot
         const botErrs = validateBotSettings({
-          maxDinersPerBot: config.maxDinersPerBot,
-          reservationDuration: config.reservationDuration,
+          maxDinersPerBot: config.maxDinersPerBot ?? undefined,
+          reservationDuration: config.reservationDuration ?? undefined,
         });
         Object.assign(newErrors, botErrs);
         break;
@@ -240,12 +240,12 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
       case 5: // Configuración avanzada
         Object.assign(newErrors, validateDepositSettings({
           requiresDeposit: !!config.requiresDeposit,
-          depositAmount: config.depositAmount,
+          depositAmount: config.depositAmount ?? undefined,
         }));
         Object.assign(newErrors, validateReservationMargin({
           enabled: enableReservationMargin,
-          minTimeForReservations: config.minTimeForReservations,
-          action: config.actionDuringReservationGracePeriod,
+          minTimeForReservations: config.minTimeForReservations ?? undefined,
+          action: config.actionDuringReservationGracePeriod === null ? undefined : config.actionDuringReservationGracePeriod,
           gracePeriodRedirectPhone,
         }));
         break;
@@ -574,9 +574,9 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                     </Alert>
                     <BotSettingsForm
                       value={{
-                        maxDinersPerBot: config.maxDinersPerBot,
-                        reservationDuration: config.reservationDuration,
-                        timezone: config.timezone,
+                        maxDinersPerBot: config.maxDinersPerBot ?? undefined,
+                        reservationDuration: config.reservationDuration ?? undefined,
+                        timezone: (config.timezone ?? undefined) as string | undefined,
                       }}
                       onChange={(patch) => {
                         setConfig(prev => ({ ...prev, ...patch }));
@@ -593,8 +593,8 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                     <DepositSettingsForm
                       value={{
                         requiresDeposit: !!config.requiresDeposit,
-                        depositType: config.depositType,
-                        depositAmount: config.depositAmount,
+                        depositType: (config.depositType ?? undefined) as 'FIXED_PER_RESERVATION' | 'PER_PERSON' | undefined,
+                        depositAmount: config.depositAmount ?? undefined,
                       }}
                       onChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
                       errors={errors}
@@ -604,8 +604,10 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                     <ReservationMarginForm
                       value={{
                         enabled: enableReservationMargin,
-                        minTimeForReservations: config.minTimeForReservations,
-                        actionDuringReservationGracePeriod: config.actionDuringReservationGracePeriod as 'DISCARD' | 'REDIRECT',
+                        minTimeForReservations: config.minTimeForReservations ?? undefined,
+                        actionDuringReservationGracePeriod: (config.actionDuringReservationGracePeriod === null
+                          ? undefined
+                          : (config.actionDuringReservationGracePeriod as 'DISCARD' | 'REDIRECT' | undefined)),
                         gracePeriodRedirectPhone,
                       }}
                       onChange={(patch) => {
