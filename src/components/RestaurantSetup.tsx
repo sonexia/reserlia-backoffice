@@ -12,17 +12,13 @@ import {
   Button,
   TextField,
   Stack,
-  FormControl,
   FormControlLabel,
   Switch,
-  RadioGroup,
-  Radio,
-  FormLabel,
   Alert,
   CircularProgress,
   Card,
   CardContent,
-  Tooltip
+  
 } from '@mui/material';
 import { 
   Restaurant, 
@@ -30,14 +26,18 @@ import {
   Settings, 
   Schedule, 
   Phone, 
-  Group, 
-  Timer, 
-  InfoOutlined 
+  Group 
 } from '@mui/icons-material';
 
 // Importamos la interfaz RestaurantConfig del hook para mantener consistencia
 import { RestaurantConfig } from '../hooks/useRestaurantConfig';
 import SimplifiedScheduleConfig, { SimplifiedSchedule } from './SimplifiedScheduleConfig';
+import BotSettingsForm from './config/BotSettingsForm';
+import DepositSettingsForm from './config/DepositSettingsForm';
+import ReservationMarginForm from './config/ReservationMarginForm';
+import CallRedirectionSettingsForm from './config/CallRedirectionSettingsForm';
+import { validateSchedules, validateBotSettings, validateDepositSettings, validateReservationMargin, validateCallRedirection } from '../utils/restaurantConfigValidators';
+import { DEFAULT_MIN_TIME_FOR_RESERVATIONS } from '../config/rest-config-defaults';
 import { detectAndMapTimezone } from '../utils/timezoneUtils';
 
 // Nota: Los tipos para horarios simplificados ahora se importan desde SimplifiedScheduleConfig
@@ -85,8 +85,6 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
   // Schedule states
   const [reservationSchedule, setReservationSchedule] = useState<SimplifiedSchedule>(createDefaultSchedule());
   const [callRedirectionSchedule, setCallRedirectionSchedule] = useState<SimplifiedSchedule>(createDefaultSchedule());
-  // Mantener opción de "Mismo que el horario de reservas" para redirección de llamadas
-  const [sameCallsAsReservations, setSameCallsAsReservations] = useState<boolean>(true);
   // Teléfono para redirección de llamadas
   const [callRedirectionPhone, setCallRedirectionPhone] = useState<string>('');
   // Activación de redirección de llamadas (por defecto: siempre BOT)
@@ -94,12 +92,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
   // Teléfono para período de gracia si se redirige
   const [gracePeriodRedirectPhone, setGracePeriodRedirectPhone] = useState<string>('');
 
-  // Sincronizar automáticamente cuando la opción está activa
-  useEffect(() => {
-    if (sameCallsAsReservations) {
-      setCallRedirectionSchedule(reservationSchedule);
-    }
-  }, [sameCallsAsReservations, reservationSchedule]);
+  // La sincronización "mismo horario que reservas" ahora se maneja dentro de CallRedirectionSettingsForm
 
   // Estado real del config con valores numéricos
   const [config, setConfig] = useState<Omit<RestaurantConfig, 'id'>>({
@@ -223,65 +216,40 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
         }
         break;
       case 2: { // Horarios de reservas
-        // Validar que al menos un grupo tenga horarios configurados y días habilitados
-        const hasReservationSchedule = (
-          (reservationSchedule.weekdays.enabled && reservationSchedule.weekdays.ranges.length > 0 && 
-           (reservationSchedule.enabledDays.monday || reservationSchedule.enabledDays.tuesday || 
-            reservationSchedule.enabledDays.wednesday || reservationSchedule.enabledDays.thursday || 
-            reservationSchedule.enabledDays.friday)) ||
-          (reservationSchedule.saturday.enabled && reservationSchedule.saturday.ranges.length > 0 && 
-           reservationSchedule.enabledDays.saturday) ||
-          (reservationSchedule.sunday.enabled && reservationSchedule.sunday.ranges.length > 0 && 
-           reservationSchedule.enabledDays.sunday)
-        );
-        if (!hasReservationSchedule) {
-          newErrors.reservationSchedule = 'Debe configurar horarios de reservas para al menos un día';
-        }
+        const schedErr = validateSchedules(reservationSchedule);
+        if (schedErr) newErrors.reservationSchedule = 'Debe configurar horarios de reservas para al menos un día';
         break;
       }
       case 3: { // Horarios de redirección de llamadas
-        if (enableCallRedirection) {
-          // Validar que al menos un grupo tenga horarios configurados y días habilitados
-          const hasCallSchedule = (
-            (callRedirectionSchedule.weekdays.enabled && callRedirectionSchedule.weekdays.ranges.length > 0 && 
-             (callRedirectionSchedule.enabledDays.monday || callRedirectionSchedule.enabledDays.tuesday || 
-              callRedirectionSchedule.enabledDays.wednesday || callRedirectionSchedule.enabledDays.thursday || 
-              callRedirectionSchedule.enabledDays.friday)) ||
-            (callRedirectionSchedule.saturday.enabled && callRedirectionSchedule.saturday.ranges.length > 0 && 
-             callRedirectionSchedule.enabledDays.saturday) ||
-            (callRedirectionSchedule.sunday.enabled && callRedirectionSchedule.sunday.ranges.length > 0 && 
-             callRedirectionSchedule.enabledDays.sunday)
-          );
-          if (!hasCallSchedule) {
-            newErrors.callRedirectionSchedule = 'Debe configurar horarios de redirección para al menos un día';
-          }
-          // Validar teléfono con regex simple
-          const phone = (callRedirectionPhone || '').trim();
-          const simplePhoneRegex = /^[+]?[- 0-9()]{7,}$/;
-          if (!phone || !simplePhoneRegex.test(phone)) {
-            newErrors.callRedirectionPhone = 'Introduzca un teléfono válido (validación simple)';
-          }
-        }
+        const callErrs = validateCallRedirection({
+          enable: enableCallRedirection,
+          phone: callRedirectionPhone,
+          schedule: callRedirectionSchedule,
+        });
+        Object.assign(newErrors, callErrs);
         break;
       }
-      case 4: // Configuración del bot
-        if (!config.maxDinersPerBot || config.maxDinersPerBot <= 0) {
-          newErrors.maxDinersPerBot = 'El número máximo de comensales debe ser mayor a 0';
-        }
-        if (!config.reservationDuration || config.reservationDuration <= 0) {
-          newErrors.reservationDuration = 'El tiempo de reserva debe ser mayor a 0';
-        }
-        // Validación de teléfono para período de gracia cuando se elige REDIRECT
-        if (config.actionDuringReservationGracePeriod === 'REDIRECT') {
-          const phone = (gracePeriodRedirectPhone || '').trim();
-          const simplePhoneRegex = /^[+]?[- 0-9()]{7,}$/;
-          if (!phone || !simplePhoneRegex.test(phone)) {
-            newErrors.gracePeriodRedirectPhone = 'Introduzca un teléfono válido (validación simple)';
-          }
-        }
+      case 4: { // Configuración del bot
+        const botErrs = validateBotSettings({
+          maxDinersPerBot: config.maxDinersPerBot,
+          reservationDuration: config.reservationDuration,
+        });
+        Object.assign(newErrors, botErrs);
+        break;
+      }
+      case 5: // Configuración avanzada
+        Object.assign(newErrors, validateDepositSettings({
+          requiresDeposit: !!config.requiresDeposit,
+          depositAmount: config.depositAmount,
+        }));
+        Object.assign(newErrors, validateReservationMargin({
+          enabled: enableReservationMargin,
+          minTimeForReservations: config.minTimeForReservations,
+          action: config.actionDuringReservationGracePeriod,
+          gracePeriodRedirectPhone,
+        }));
         break;
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -303,13 +271,18 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
         ...config,
         reservationSchedule,
         callRedirectionSchedule,
-        maxDinersPerBot: parseInt(inputValues.maxDinersPerBot) || 6,
-        reservationDuration: parseInt(inputValues.reservationDuration) || 120,
+        // usar valores del estado configurado por subformularios
+        maxDinersPerBot: config.maxDinersPerBot,
+        reservationDuration: config.reservationDuration,
         // Persistir el número de redirección de llamadas
         callRedirectionPhone: callRedirectionPhone || undefined,
         enableCallRedirection,
+        // Si margen habilitado y sin valor, usar default
+        minTimeForReservations: enableReservationMargin
+          ? (config.minTimeForReservations ?? DEFAULT_MIN_TIME_FOR_RESERVATIONS)
+          : undefined,
         gracePeriodRedirectPhone: gracePeriodRedirectPhone || undefined,
-      };
+      } as Omit<RestaurantConfig, 'id'>;
       onComplete(finalConfig);
     }
   };
@@ -574,73 +547,22 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                 {/* Paso 4: Horarios de redirección de llamadas */}
                 {index === 3 && (
                   <Box>
-                    {/* Atención de llamadas: BOT siempre vs redirigir algunas */}
-                    <FormControl component="fieldset" sx={{ mb: 1 }}>
-                      <FormLabel component="legend">Atención de llamadas</FormLabel>
-                      <RadioGroup
-                        value={enableCallRedirection ? 'REDIRECT_SOME' : 'ALWAYS_BOT'}
-                        onChange={(e) => {
-                          const v = e.target.value;
-                          const enabled = v === 'REDIRECT_SOME';
-                          setEnableCallRedirection(enabled);
-                          if (!enabled) {
-                            // Limpia errores relacionados
-                            setErrors(prev => ({ ...prev, callRedirectionSchedule: '', callRedirectionPhone: '' }));
-                          }
-                        }}
-                        row
-                      >
-                        <FormControlLabel value="ALWAYS_BOT" control={<Radio />} label="Siempre las atiende el bot" />
-                        <FormControlLabel value="REDIRECT_SOME" control={<Radio />} label="Quiero redirigir algunas llamadas" />
-                      </RadioGroup>
-                    </FormControl>
-
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={sameCallsAsReservations}
-                          onChange={(e) => {
-                            const checked = e.target.checked;
-                            setSameCallsAsReservations(checked);
-                            if (checked) {
-                              setCallRedirectionSchedule(reservationSchedule);
-                            }
-                          }}
-                          disabled={!enableCallRedirection}
-                        />
-                      }
-                      label="Mismo que el horario de reservas"
+                    <CallRedirectionSettingsForm
+                      value={{
+                        enableCallRedirection,
+                        callRedirectionPhone,
+                        reservationSchedule,
+                        callRedirectionSchedule,
+                      }}
+                      onChange={(patch) => {
+                        if (patch.enableCallRedirection !== undefined) setEnableCallRedirection(!!patch.enableCallRedirection);
+                        if (patch.callRedirectionPhone !== undefined) setCallRedirectionPhone(patch.callRedirectionPhone);
+                        if (patch.callRedirectionSchedule) setCallRedirectionSchedule(patch.callRedirectionSchedule);
+                        if (patch.reservationSchedule) setReservationSchedule(patch.reservationSchedule);
+                      }}
+                      errors={errors}
+                      allowUseSameScheduleToggle={true}
                     />
-
-                    {/* Número para redirigir */}
-                    <Box sx={{ mt: 2, mb: 2 }}>
-                      <TextField
-                        label="Número para redirigir llamadas"
-                        placeholder="Ej: +34 612 345 678"
-                        fullWidth
-                        value={callRedirectionPhone}
-                        onChange={(e) => setCallRedirectionPhone(e.target.value)}
-                        error={Boolean(errors.callRedirectionPhone)}
-                        helperText={errors.callRedirectionPhone || 'Se usará este número cuando toque redirigir llamadas'}
-                        disabled={!enableCallRedirection}
-                      />
-                    </Box>
-
-                    {sameCallsAsReservations ? (
-                      <Alert severity="info" sx={{ mt: 1 }}>
-                        Usando el mismo horario que el de reservas. Desactiva la opción para personalizar este horario.
-                      </Alert>
-                    ) : (
-                      enableCallRedirection && (
-                        <SimplifiedScheduleConfig
-                          title="Horarios de Redirección de Llamadas"
-                          description="Configure los horarios en los que las llamadas serán redirigidas a una persona responsable en lugar del bot."
-                          schedule={callRedirectionSchedule}
-                          onChange={setCallRedirectionSchedule}
-                          error={errors.callRedirectionSchedule}
-                        />
-                      )
-                    )}
                   </Box>
                 )}
 
@@ -648,54 +570,19 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                 {index === 4 && (
                   <Stack spacing={3}>
                     <Alert severity="info">
-                      Configure los límites y tiempos del bot para gestionar las reservas de manera eficiente.
+                      Configure los límites, tiempos y zona horaria del bot para gestionar las reservas de manera eficiente.
                     </Alert>
-                    
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Group />
-                          Número máximo de comensales por bot
-                          <Tooltip title="El bot redirigirá las llamadas a personal cuando el número de comensales sea superior a este límite">
-                            <InfoOutlined fontSize="small" color="info" />
-                          </Tooltip>
-                        </Typography>
-                        <TextField
-                          fullWidth
-                          label="Máximo de comensales que atenderá el bot"
-                          type="number"
-                          value={inputValues.maxDinersPerBot}
-                          onChange={(e) => handleInputChange('maxDinersPerBot', e.target.value)}
-                          error={!!errors.maxDinersPerBot}
-                          helperText={errors.maxDinersPerBot || "Si una reserva supera este número, se redirigirá a una persona responsable"}
-                          inputProps={{ min: 1, max: 20 }}
-                          sx={{ maxWidth: { sm: '50%' } }}
-                        />
-                      </CardContent>
-                    </Card>
-                    
-                    <Card variant="outlined">
-                      <CardContent>
-                        <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Timer />
-                          Tiempo de reserva
-                          <Tooltip title="Tiempo que el restaurante da a los comensales para comer. Necesario para saber cuándo puede entrar una nueva reserva en la misma mesa">
-                            <InfoOutlined fontSize="small" color="info" />
-                          </Tooltip>
-                        </Typography>
-                        <TextField
-                          fullWidth
-                          label="Tiempo de reserva (minutos)"
-                          type="number"
-                          value={inputValues.reservationDuration}
-                          onChange={(e) => handleInputChange('reservationDuration', e.target.value)}
-                          error={!!errors.reservationDuration}
-                          helperText={errors.reservationDuration || "Tiempo que dura una reserva para calcular disponibilidad de mesas"}
-                          inputProps={{ min: 30, max: 480, step: 15 }}
-                          sx={{ maxWidth: { sm: '50%' } }}
-                        />
-                      </CardContent>
-                    </Card>
+                    <BotSettingsForm
+                      value={{
+                        maxDinersPerBot: config.maxDinersPerBot,
+                        reservationDuration: config.reservationDuration,
+                        timezone: config.timezone,
+                      }}
+                      onChange={(patch) => {
+                        setConfig(prev => ({ ...prev, ...patch }));
+                      }}
+                      errors={errors}
+                    />
                   </Stack>
                 )}
 
@@ -703,167 +590,32 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                 {index === 5 && (
                   <Stack spacing={3} sx={{ width: '100%' }}>
                     {/* Configuración de paga y señal */}
-                    <Box>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={config.requiresDeposit || false}
-                            onChange={(e) => setConfig(prev => ({ ...prev, requiresDeposit: e.target.checked }))}
-                          />
-                        }
-                        label="¿Quieres que el cliente realice una paga y señal?"
-                      />
-                      
-                      {config.requiresDeposit && (
-                        <Box sx={{ mt: 2, ml: 2 }}>
-                          <FormControl component="fieldset">
-                            <FormLabel component="legend" sx={{ mb: 1 }}>Tipo de paga y señal:</FormLabel>
-                            <RadioGroup
-                              value={config.depositType}
-                              onChange={(e) => setConfig(prev => ({ ...prev, depositType: e.target.value as 'FIXED_PER_RESERVATION' | 'PER_PERSON' }))}
-                            >
-                              <FormControlLabel
-                                value="FIXED_PER_RESERVATION"
-                                control={<Radio />}
-                                label="Valor fijo por reserva"
-                              />
-                              <FormControlLabel
-                                value="PER_PERSON"
-                                control={<Radio />}
-                                label="Valor por persona"
-                              />
-                            </RadioGroup>
-                          </FormControl>
-                          
-                          <TextField
-                            fullWidth
-                            label={`Cantidad (€) ${config.depositType === 'PER_PERSON' ? 'por persona' : 'por reserva'}`}
-                            type="number"
-                            value={inputValues.depositAmount}
-                            onChange={(e) => handleInputChange('depositAmount', e.target.value)}
-                            sx={{ mt: 2 }}
-                            inputProps={{ min: 0, step: 0.01 }}
-                          />
-                        </Box>
-                      )}
-                    </Box>
+                    <DepositSettingsForm
+                      value={{
+                        requiresDeposit: !!config.requiresDeposit,
+                        depositType: config.depositType,
+                        depositAmount: config.depositAmount,
+                      }}
+                      onChange={(patch) => setConfig(prev => ({ ...prev, ...patch }))}
+                      errors={errors}
+                    />
 
                     {/* Configuración de margen de reserva (opcional) */}
-                    <Box>
-                      <Typography variant="h6" sx={{ mb: 2 }}>
-                        Margen de Reserva (Opcional)
-                        <Tooltip title="Configure el tiempo mínimo de antelación para aceptar reservas. Este campo es opcional y puede configurarse más tarde.">
-                          <InfoOutlined sx={{ ml: 1, fontSize: 18, color: 'text.secondary' }} />
-                        </Tooltip>
-                      </Typography>
-                      
-                      <Stack spacing={2}>
-                        <FormControlLabel
-                          control={
-                            <Switch
-                              checked={enableReservationMargin}
-                              onChange={(e) => {
-                                setEnableReservationMargin(e.target.checked);
-                                if (e.target.checked) {
-                                  // Establecer valores por defecto cuando se habilita
-                                  setInputValues(prev => ({ ...prev, minTimeForReservations: '15' }));
-                                  setConfig(prev => ({
-                                    ...prev,
-                                    minTimeForReservations: 15,
-                                    actionDuringReservationGracePeriod: 'DISCARD'
-                                  }));
-                                } else {
-                                  // Limpiar cuando se deshabilita
-                                  setInputValues(prev => ({ ...prev, minTimeForReservations: '' }));
-                                  setConfig(prev => ({
-                                    ...prev,
-                                    minTimeForReservations: undefined,
-                                    actionDuringReservationGracePeriod: 'DISCARD'
-                                  }));
-                                }
-                              }}
-                            />
-                          }
-                          label="Habilitar margen mínimo de reserva"
-                        />
-                        
-                        {enableReservationMargin && (
-                          <Box sx={{ ml: 3, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, maxWidth: 400 }}>
-                              <TextField
-                                label="Tiempo mínimo de antelación (minutos)"
-                                type="text"
-                                value={inputValues.minTimeForReservations}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  // Permitir solo números
-                                  if (value === '' || /^\d+$/.test(value)) {
-                                    setInputValues(prev => ({ ...prev, minTimeForReservations: value }));
-                                    const numValue = value === '' ? 15 : Math.max(1, parseInt(value) || 1);
-                                    setConfig(prev => ({ ...prev, minTimeForReservations: numValue }));
-                                  }
-                                }}
-                                onBlur={() => {
-                                  if ((inputValues.minTimeForReservations || '').trim() === '') {
-                                    setInputValues(prev => ({ ...prev, minTimeForReservations: '15' }));
-                                    setConfig(prev => ({ ...prev, minTimeForReservations: 15 }));
-                                  } else {
-                                    const parsed = Math.max(1, parseInt(inputValues.minTimeForReservations, 10) || 15);
-                                    setConfig(prev => ({ ...prev, minTimeForReservations: parsed }));
-                                  }
-                                }}
-                                helperText="Por defecto: 15 minutos"
-                                sx={{ flexGrow: 1 }}
-                              />
-                            </Box>
-                            
-                            <FormControl component="fieldset" sx={{ mt: 1 }}>
-                              <FormLabel component="legend">
-                                ¿Qué hacer cuando una reserva no cumple el tiempo mínimo?
-                              </FormLabel>
-                              <RadioGroup
-                                value={config.actionDuringReservationGracePeriod}
-                                onChange={(e) => {
-                                  const value = e.target.value as 'DISCARD' | 'REDIRECT';
-                                  setConfig(prev => ({ 
-                                    ...prev, 
-                                    actionDuringReservationGracePeriod: value
-                                  }));
-                                  if (value === 'REDIRECT' && !gracePeriodRedirectPhone && callRedirectionPhone) {
-                                    setGracePeriodRedirectPhone(callRedirectionPhone);
-                                  }
-                                }}
-                                sx={{ mt: 1 }}
-                              >
-                                <FormControlLabel
-                                  value="DISCARD"
-                                  control={<Radio />}
-                                  label="Descartar la reserva (informar al cliente que no se puede reservar con tan poca antelación)"
-                                />
-                                <FormControlLabel
-                                  value="REDIRECT"
-                                  control={<Radio />}
-                                  label="Redireccionar a la persona de contacto del restaurante"
-                                />
-                              </RadioGroup>
-                              {config.actionDuringReservationGracePeriod === 'REDIRECT' && (
-                                <Box sx={{ mt: 2 }}>
-                                  <TextField
-                                    label="Número para redirigir durante el período de gracia"
-                                    placeholder="Ej: +34 612 345 678"
-                                    fullWidth
-                                    value={gracePeriodRedirectPhone}
-                                    onChange={(e) => setGracePeriodRedirectPhone(e.target.value)}
-                                    error={Boolean(errors.gracePeriodRedirectPhone)}
-                                    helperText={errors.gracePeriodRedirectPhone || 'Si no se indica, se usará el de redirección general'}
-                                  />
-                                </Box>
-                              )}
-                            </FormControl>
-                          </Box>
-                        )}
-                      </Stack>
-                    </Box>
+                    <ReservationMarginForm
+                      value={{
+                        enabled: enableReservationMargin,
+                        minTimeForReservations: config.minTimeForReservations,
+                        actionDuringReservationGracePeriod: config.actionDuringReservationGracePeriod as 'DISCARD' | 'REDIRECT',
+                        gracePeriodRedirectPhone,
+                      }}
+                      onChange={(patch) => {
+                        if (patch.enabled !== undefined) setEnableReservationMargin(!!patch.enabled);
+                        if (patch.minTimeForReservations !== undefined) setConfig(prev => ({ ...prev, minTimeForReservations: patch.minTimeForReservations }))
+                        if (patch.actionDuringReservationGracePeriod !== undefined) setConfig(prev => ({ ...prev, actionDuringReservationGracePeriod: patch.actionDuringReservationGracePeriod }))
+                        if (patch.gracePeriodRedirectPhone !== undefined) setGracePeriodRedirectPhone(patch.gracePeriodRedirectPhone)
+                      }}
+                      errors={errors}
+                    />
 
                     {/* Preguntas adicionales */}
                     <Box>

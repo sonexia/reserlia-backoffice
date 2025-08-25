@@ -7,13 +7,8 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
-  FormControl,
   FormControlLabel,
   Switch,
-  RadioGroup,
-  Radio,
-  FormLabel,
   Alert,
   Card,
   CardContent,
@@ -23,6 +18,11 @@ import {
 } from '@mui/material';
 import { Tune, Help, Save, Cancel } from '@mui/icons-material';
 import { RestaurantConfig } from '../hooks/useRestaurantConfig';
+import { DEFAULT_MIN_TIME_FOR_RESERVATIONS } from '../config/rest-config-defaults';
+import BotSettingsForm from './config/BotSettingsForm';
+import DepositSettingsForm from './config/DepositSettingsForm';
+import ReservationMarginForm from './config/ReservationMarginForm';
+import { validateBotSettings, validateDepositSettings, validateReservationMargin } from '../utils/restaurantConfigValidators';
 
 interface AdvancedSettingsProps {
   config: RestaurantConfig | null;
@@ -52,7 +52,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
     
     // Configuración de margen de reserva
     enableReservationMargin: false,
-    minTimeForReservations: 15 as number,
+    minTimeForReservations: undefined as number | undefined,
     actionDuringReservationGracePeriod: 'DISCARD' as 'DISCARD' | 'REDIRECT',
     
     // Preguntas adicionales
@@ -62,8 +62,6 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  // Estado string para permitir vaciar y editar libremente el input sin forzar un número inmediato
-  const [minTimeInput, setMinTimeInput] = useState<string>('15');
   // Teléfono para redirección durante el período de gracia
   const [gracePeriodRedirectPhone, setGracePeriodRedirectPhone] = useState<string>('');
 
@@ -78,18 +76,12 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         depositType: config.depositType || 'FIXED_PER_RESERVATION',
         depositAmount: config.depositAmount || undefined,
         enableReservationMargin: Boolean(config.minTimeForReservations),
-        minTimeForReservations: config.minTimeForReservations || 15,
+        minTimeForReservations: config.minTimeForReservations ?? undefined,
         actionDuringReservationGracePeriod: config.actionDuringReservationGracePeriod || 'DISCARD',
         askReservationReason: config.askReservationReason || false,
         askAllergies: config.askAllergies || false,
         askFoodType: config.askFoodType || false
       });
-      // Sincronizar el estado string del input
-      setMinTimeInput(
-        config.minTimeForReservations !== undefined && config.minTimeForReservations !== null
-          ? String(config.minTimeForReservations)
-          : ''
-      );
       // Cargar teléfono de redirección del período de gracia
       setGracePeriodRedirectPhone((config as { gracePeriodRedirectPhone?: string | null }).gracePeriodRedirectPhone || '');
     }
@@ -98,35 +90,23 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Validar configuración del bot
-    if (editConfig.maxDinersPerBot !== undefined && editConfig.maxDinersPerBot <= 0) {
-      newErrors.maxDinersPerBot = 'El número máximo de comensales debe ser mayor a 0';
-    }
+    // Validaciones centralizadas
+    Object.assign(newErrors, validateBotSettings({
+      maxDinersPerBot: editConfig.maxDinersPerBot,
+      reservationDuration: editConfig.reservationDuration,
+    }));
 
-    if (editConfig.reservationDuration !== undefined && editConfig.reservationDuration <= 0) {
-      newErrors.reservationDuration = 'La duración de reserva debe ser mayor a 0';
-    }
+    Object.assign(newErrors, validateDepositSettings({
+      requiresDeposit: editConfig.requiresDeposit,
+      depositAmount: editConfig.depositAmount,
+    }));
 
-    // Validar configuración de depósitos
-    if (editConfig.requiresDeposit) {
-      if (!editConfig.depositAmount || editConfig.depositAmount <= 0) {
-        newErrors.depositAmount = 'Debe especificar una cantidad válida para el depósito';
-      }
-    }
-
-    // Validar configuración de margen de reserva
-    if (editConfig.enableReservationMargin && editConfig.minTimeForReservations <= 0) {
-      newErrors.minTimeForReservations = 'El tiempo mínimo debe ser mayor a 0 minutos';
-    }
-
-    // Validar teléfono del período de gracia si se elige REDIRECT
-    if (editConfig.enableReservationMargin && editConfig.actionDuringReservationGracePeriod === 'REDIRECT') {
-      const phone = (gracePeriodRedirectPhone || '').trim();
-      const simplePhoneRegex = /^[+]?[- 0-9()]{7,}$/;
-      if (!phone || !simplePhoneRegex.test(phone)) {
-        newErrors.gracePeriodRedirectPhone = 'Introduzca un teléfono válido (validación simple)';
-      }
-    }
+    Object.assign(newErrors, validateReservationMargin({
+      enabled: editConfig.enableReservationMargin,
+      minTimeForReservations: editConfig.minTimeForReservations,
+      action: editConfig.actionDuringReservationGracePeriod,
+      gracePeriodRedirectPhone,
+    }));
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -143,17 +123,15 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         requiresDeposit: editConfig.requiresDeposit,
         depositType: editConfig.depositType,
         depositAmount: editConfig.depositAmount,
-        // Si el margen está habilitado y el input está vacío, aplicar por defecto 15 al guardar
+        // Margen de reserva
         minTimeForReservations: editConfig.enableReservationMargin
-          ? (minTimeInput.trim() === ''
-              ? 15
-              : Math.max(1, parseInt(minTimeInput, 10) || 15))
+          ? (editConfig.minTimeForReservations ?? DEFAULT_MIN_TIME_FOR_RESERVATIONS)
           : undefined,
         actionDuringReservationGracePeriod: editConfig.enableReservationMargin ? editConfig.actionDuringReservationGracePeriod : undefined,
-      // Guardar teléfono de redirección del período de gracia cuando aplica
-      gracePeriodRedirectPhone: (editConfig.enableReservationMargin && editConfig.actionDuringReservationGracePeriod === 'REDIRECT')
-        ? (gracePeriodRedirectPhone || undefined)
-        : undefined,
+        // Guardar teléfono de redirección del período de gracia cuando aplica
+        gracePeriodRedirectPhone: (editConfig.enableReservationMargin && editConfig.actionDuringReservationGracePeriod === 'REDIRECT')
+          ? (gracePeriodRedirectPhone || undefined)
+          : undefined,
         askReservationReason: editConfig.askReservationReason,
         askAllergies: editConfig.askAllergies,
         askFoodType: editConfig.askFoodType
@@ -174,7 +152,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         depositType: config.depositType || 'FIXED_PER_RESERVATION',
         depositAmount: config.depositAmount || undefined,
         enableReservationMargin: Boolean(config.minTimeForReservations),
-        minTimeForReservations: config.minTimeForReservations ?? 15,
+        minTimeForReservations: config.minTimeForReservations ?? undefined,
         actionDuringReservationGracePeriod: config.actionDuringReservationGracePeriod || 'DISCARD',
         askReservationReason: config.askReservationReason || false,
         askAllergies: config.askAllergies || false,
@@ -224,16 +202,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
           {/* Configuración del Bot */}
           <Card sx={{ mb: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                gap: 1, 
-                mb: 2,
-                flexWrap: 'wrap'
-              }}>
-                <Typography variant="h6" sx={{ 
-                  fontSize: { xs: '1rem', sm: '1.25rem' }
-                }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, flexWrap: 'wrap' }}>
+                <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                   Configuración del Bot de Reservas
                 </Typography>
                 <Tooltip title="Estos parámetros controlan cómo funciona el bot de atención automática">
@@ -242,144 +212,41 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                   </IconButton>
                 </Tooltip>
               </Box>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <TextField
-                  fullWidth
-                  label="Máximo de comensales por bot"
-                  type="number"
-                  value={editConfig.maxDinersPerBot || ''}
-                  onChange={(e) => setEditConfig(prev => ({ 
-                    ...prev, 
-                    maxDinersPerBot: parseInt(e.target.value) || undefined 
-                  }))}
-                  error={Boolean(errors.maxDinersPerBot)}
-                  helperText={errors.maxDinersPerBot || 'Número máximo de comensales que el bot puede gestionar por reserva'}
-                  inputProps={{ min: 1 }}
-                  sx={{ maxWidth: { xs: '100%', sm: 300 } }}
-                />
-
-                <TextField
-                  fullWidth
-                  label="Duración estimada por reserva (minutos)"
-                  type="number"
-                  value={editConfig.reservationDuration || ''}
-                  onChange={(e) => setEditConfig(prev => ({ 
-                    ...prev, 
-                    reservationDuration: parseInt(e.target.value) || undefined 
-                  }))}
-                  error={Boolean(errors.reservationDuration)}
-                  helperText={errors.reservationDuration || 'Tiempo estimado que ocupará cada mesa (ayuda a calcular disponibilidad)'}
-                  inputProps={{ min: 15, step: 15 }}
-                  sx={{ maxWidth: { xs: '100%', sm: 300 } }}
-                />
-                
-                <TextField
-                  select
-                  fullWidth
-                  label="Zona horaria del restaurante"
-                  value={editConfig.timezone}
-                  onChange={(e) => setEditConfig(prev => ({ 
-                    ...prev, 
-                    timezone: e.target.value 
-                  }))}
-                  helperText="Todas las reservas se mostrarán en esta zona horaria"
-                  sx={{ maxWidth: 300 }}
-                  SelectProps={{
-                    native: true,
-                  }}
-                >
-                  <option value="Europe/Madrid">España peninsular (CET/CEST)</option>
-                  <option value="Atlantic/Canary">España Canarias (WET/WEST)</option>
-                </TextField>
-              </Box>
+              <BotSettingsForm
+                value={{
+                  maxDinersPerBot: editConfig.maxDinersPerBot,
+                  reservationDuration: editConfig.reservationDuration,
+                  timezone: editConfig.timezone,
+                }}
+                onChange={(patch) => setEditConfig(prev => ({ ...prev, ...patch }))}
+                errors={errors}
+              />
             </CardContent>
           </Card>
 
           {/* Configuración de Depósitos */}
           <Card sx={{ mb: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Typography variant="h6" sx={{ 
-                mb: 2,
-                fontSize: { xs: '1rem', sm: '1.25rem' }
-              }}>
+              <Typography variant="h6" sx={{ mb: 2, fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                 Configuración de Paga y Señal
               </Typography>
-
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={editConfig.requiresDeposit}
-                      onChange={(e) => setEditConfig(prev => ({ ...prev, requiresDeposit: e.target.checked }))}
-                    />
-                  }
-                  label="¿Requiere paga y señal para confirmar reservas?"
-                  sx={{ alignItems: 'flex-start' }}
-                />
-
-                {editConfig.requiresDeposit && (
-                  <Box sx={{ 
-                    ml: { xs: 1, sm: 3 }, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: 2 
-                  }}>
-                    <FormControl>
-                      <FormLabel>Tipo de depósito</FormLabel>
-                      <RadioGroup
-                        value={editConfig.depositType}
-                        onChange={(e) => setEditConfig(prev => ({ 
-                          ...prev, 
-                          depositType: e.target.value as 'FIXED_PER_RESERVATION' | 'PER_PERSON' 
-                        }))}
-                      >
-                        <FormControlLabel
-                          value="FIXED_PER_RESERVATION"
-                          control={<Radio />}
-                          label="Cantidad fija por reserva"
-                        />
-                        <FormControlLabel
-                          value="PER_PERSON"
-                          control={<Radio />}
-                          label="Valor por persona"
-                        />
-                      </RadioGroup>
-                    </FormControl>
-                    
-                    <TextField
-                      fullWidth
-                      label={`Cantidad (€) ${editConfig.depositType === 'PER_PERSON' ? 'por persona' : 'por reserva'}`}
-                      type="number"
-                      value={editConfig.depositAmount || ''}
-                      onChange={(e) => setEditConfig(prev => ({ 
-                        ...prev, 
-                        depositAmount: parseFloat(e.target.value) || undefined 
-                      }))}
-                      error={Boolean(errors.depositAmount)}
-                      helperText={errors.depositAmount}
-                      inputProps={{ min: 0, step: 0.01 }}
-                      sx={{ maxWidth: { xs: '100%', sm: 300 } }}
-                    />
-                  </Box>
-                )}
-              </Box>
+              <DepositSettingsForm
+                value={{
+                  requiresDeposit: editConfig.requiresDeposit,
+                  depositType: editConfig.depositType,
+                  depositAmount: editConfig.depositAmount,
+                }}
+                onChange={(patch) => setEditConfig(prev => ({ ...prev, ...patch }))}
+                errors={errors}
+              />
             </CardContent>
           </Card>
 
           {/* Configuración de Margen de Reserva */}
           <Card sx={{ mb: 3 }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
-              <Box sx={{ 
-                display: 'flex', 
-                alignItems: 'center', 
-                mb: 2,
-                flexWrap: 'wrap',
-                gap: 1
-              }}>
-                <Typography variant="h6" sx={{ 
-                  fontSize: { xs: '1rem', sm: '1.25rem' }
-                }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+                <Typography variant="h6" sx={{ fontSize: { xs: '1rem', sm: '1.25rem' } }}>
                   Margen de Reserva
                 </Typography>
                 <Tooltip title="Configure el tiempo mínimo de antelación para aceptar reservas y qué hacer cuando no se cumple">
@@ -388,114 +255,31 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
                   </IconButton>
                 </Tooltip>
               </Box>
-              
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={editConfig.enableReservationMargin}
-                      onChange={(e) => {
-                        setEditConfig(prev => ({ 
-                          ...prev, 
-                          enableReservationMargin: e.target.checked,
-                          minTimeForReservations: e.target.checked
-                            ? (minTimeInput.trim() === '' ? 15 : Math.max(1, parseInt(minTimeInput, 10) || 15))
-                            : prev.minTimeForReservations,
-                          actionDuringReservationGracePeriod: e.target.checked ? 'DISCARD' : prev.actionDuringReservationGracePeriod
-                        }));
-                        // Cuando se habilita, si está vacío, mostrar 15 por defecto; si se deshabilita, mantener lo escrito
-                        if (e.target.checked) {
-                          setMinTimeInput(prev => (prev.trim() === '' ? '15' : prev));
-                        }
-                      }}
-                    />
+              <ReservationMarginForm
+                value={{
+                  enabled: editConfig.enableReservationMargin,
+                  minTimeForReservations: editConfig.minTimeForReservations,
+                  actionDuringReservationGracePeriod: editConfig.actionDuringReservationGracePeriod,
+                  gracePeriodRedirectPhone,
+                }}
+                onChange={(patch) => {
+                  // Si el usuario cambia a REDIRECT y no hay teléfono local, pre-cargar con el general si existe
+                  if (patch.actionDuringReservationGracePeriod === 'REDIRECT' && !gracePeriodRedirectPhone && (config?.callRedirectionPhone || '')) {
+                    setGracePeriodRedirectPhone(config!.callRedirectionPhone!);
                   }
-                  label="Habilitar margen mínimo de reserva"
-                />
-                {editConfig.enableReservationMargin && (
-                  <Box sx={{ 
-                    ml: { xs: 1, sm: 3 }, 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    gap: 2 
-                  }}>
-                    <Box sx={{ 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: 1, 
-                      maxWidth: { xs: '100%', sm: 300 }
-                    }}>
-                      <TextField
-                        label="Tiempo mínimo de antelación (minutos)"
-                        type="text"
-                        value={minTimeInput}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === '' || /^\d+$/.test(value)) {
-                            setMinTimeInput(value);
-                          }
-                        }}
-                        onBlur={() => {
-                          if (minTimeInput.trim() === '') {
-                            // Si se deja vacío al salir, fijar 15 pero mantener el margen habilitado
-                            setMinTimeInput('15');
-                            setEditConfig(prev => ({ ...prev, minTimeForReservations: 15 }));
-                          } else {
-                            const parsed = Math.max(1, parseInt(minTimeInput, 10) || 15);
-                            setEditConfig(prev => ({ ...prev, minTimeForReservations: parsed }));
-                          }
-                        }}
-                        error={Boolean(errors.minTimeForReservations)}
-                        helperText={errors.minTimeForReservations || "Por defecto: 15 minutos"}
-                        sx={{ flexGrow: 1 }}
-                      />
-                    </Box>
-                  </Box>
-                )}
-
-                {editConfig.enableReservationMargin && (
-                  <Box sx={{ ml: { xs: 1, sm: 3 } }}>
-                    <FormControl component="fieldset" sx={{ mt: 1, width: '100%' }}>
-                      <FormLabel component="legend" sx={{ 
-                        fontSize: { xs: '0.875rem', sm: '1rem' },
-                        mb: 1
-                      }}>
-                        ¿Qué hacer cuando una reserva no cumple el tiempo mínimo?
-                      </FormLabel>
-                      <RadioGroup
-                        value={editConfig.actionDuringReservationGracePeriod}
-                        onChange={(e) => {
-                          const value = e.target.value as 'DISCARD' | 'REDIRECT';
-                          setEditConfig(prev => ({ 
-                            ...prev, 
-                            actionDuringReservationGracePeriod: value 
-                          }));
-                          if (value === 'REDIRECT' && !gracePeriodRedirectPhone && (config?.callRedirectionPhone || '')) {
-                            setGracePeriodRedirectPhone(config!.callRedirectionPhone!);
-                          }
-                        }}
-                        sx={{ gap: { xs: 1, sm: 0.5 } }}
-                      >
-                        <FormControlLabel value="DISCARD" control={<Radio />} label="Descartar la reserva" />
-                        <FormControlLabel value="REDIRECT" control={<Radio />} label="Redireccionar a la persona de contacto del restaurante" />
-                      </RadioGroup>
-                      {editConfig.actionDuringReservationGracePeriod === 'REDIRECT' && (
-                        <Box sx={{ mt: 2 }}>
-                          <TextField
-                            label="Número para redirigir durante el período de gracia"
-                            placeholder="Ej: +34 612 345 678"
-                            fullWidth
-                            value={gracePeriodRedirectPhone}
-                            onChange={(e) => setGracePeriodRedirectPhone(e.target.value)}
-                            error={Boolean(errors.gracePeriodRedirectPhone)}
-                            helperText={errors.gracePeriodRedirectPhone || 'Si no se indica, se usará el de redirección general'}
-                          />
-                        </Box>
-                      )}
-                    </FormControl>
-                  </Box>
-                )}
-              </Box>
+                  if (patch.gracePeriodRedirectPhone !== undefined) {
+                    setGracePeriodRedirectPhone(patch.gracePeriodRedirectPhone);
+                  }
+                  if (patch.enabled !== undefined) {
+                    setEditConfig(prev => ({ ...prev, enableReservationMargin: !!patch.enabled }));
+                  }
+                  setEditConfig(prev => ({ ...prev, 
+                    minTimeForReservations: patch.minTimeForReservations ?? prev.minTimeForReservations,
+                    actionDuringReservationGracePeriod: patch.actionDuringReservationGracePeriod ?? prev.actionDuringReservationGracePeriod,
+                  }));
+                }}
+                errors={errors}
+              />
             </CardContent>
           </Card>
 
