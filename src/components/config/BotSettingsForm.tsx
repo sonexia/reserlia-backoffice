@@ -26,7 +26,7 @@ const BotSettingsForm: React.FC<BotSettingsFormProps> = ({ value, onChange, erro
         value={maxDinersPerBot ?? ''}
         onChange={(e) => onChange({ maxDinersPerBot: e.target.value === '' ? undefined : parseInt(e.target.value, 10) })}
         error={Boolean(errors.maxDinersPerBot)}
-        helperText={errors.maxDinersPerBot || 'Número máximo de comensales que el bot puede gestionar por reserva'}
+        helperText={errors.maxDinersPerBot || 'Máximo de comensales por reserva que gestiona el bot'}
         inputProps={{ min: 1 }}
         sx={{ maxWidth: { xs: '100%', sm: 300 } }}
       />
@@ -38,7 +38,7 @@ const BotSettingsForm: React.FC<BotSettingsFormProps> = ({ value, onChange, erro
         value={reservationDuration ?? ''}
         onChange={(e) => onChange({ reservationDuration: e.target.value === '' ? undefined : parseInt(e.target.value, 10) })}
         error={Boolean(errors.reservationDuration)}
-        helperText={errors.reservationDuration || 'Tiempo estimado que ocupará cada mesa (ayuda a calcular disponibilidad)'}
+        helperText={errors.reservationDuration || 'Tiempo estimado que ocupa cada reserva (para calcular disponibilidad)'}
         inputProps={{ min: 15, step: 15 }}
         sx={{ maxWidth: { xs: '100%', sm: 300 } }}
       />
@@ -49,7 +49,7 @@ const BotSettingsForm: React.FC<BotSettingsFormProps> = ({ value, onChange, erro
         label="Zona horaria del restaurante"
         value={timezone}
         onChange={(e) => onChange({ timezone: e.target.value })}
-        helperText="Todas las reservas se mostrarán en esta zona horaria"
+        helperText="Las horas se mostrarán en esta zona horaria"
         sx={{ maxWidth: 300 }}
         SelectProps={{ native: true }}
       >

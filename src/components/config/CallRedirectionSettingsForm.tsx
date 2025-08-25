@@ -39,11 +39,11 @@ const CallRedirectionSettingsForm: React.FC<CallRedirectionSettingsFormProps> = 
       <Box sx={{ mb: 2 }}>
         <FormControlLabel
           control={<Checkbox checked={!enableCallRedirection} onChange={(e) => onChange({ enableCallRedirection: !e.target.checked })} />}
-          label="Siempre las atiende el bot"
+          label="Atender todas las llamadas con el bot"
         />
         <FormControlLabel
           control={<Checkbox checked={enableCallRedirection} onChange={(e) => onChange({ enableCallRedirection: e.target.checked })} />}
-          label="Quiero redirigir algunas llamadas"
+          label="Redirigir algunas llamadas a un número"
         />
       </Box>
 
@@ -62,15 +62,15 @@ const CallRedirectionSettingsForm: React.FC<CallRedirectionSettingsFormProps> = 
           value={callRedirectionPhone ?? ''}
           onChange={(e) => onChange({ callRedirectionPhone: e.target.value })}
           error={Boolean(errors.callRedirectionPhone)}
-          helperText={errors.callRedirectionPhone || 'Se usará este número cuando toque redirigir llamadas'}
+          helperText={errors.callRedirectionPhone || 'Usaremos este número cuando corresponda redirigir llamadas'}
           disabled={!enableCallRedirection}
         />
       </Box>
 
       {enableCallRedirection && !useSame && (
         <SimplifiedScheduleConfig
-          title="Horarios de Redirección de Llamadas"
-          description="Configura cuándo las llamadas deben ser redirigidas"
+          title="Horario de redirección de llamadas"
+          description="Indica en qué franjas se redirigen las llamadas"
           schedule={callRedirectionSchedule || reservationSchedule}
           onChange={(s) => onChange({ callRedirectionSchedule: s })}
           error={errors.callRedirectionSchedule}

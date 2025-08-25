@@ -173,7 +173,7 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
                   onChange={(e) => updateScheduleGroup(groupKey, { enabled: e.target.checked })}
                 />
               }
-              label="Activar"
+              label="Habilitar"
             />
           </Box>
 
@@ -240,10 +240,10 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
               {isWeekdaysGroup && (
                 <Box sx={{ mt: 3, pt: 2, borderTop: '1px solid', borderColor: 'divider' }}>
                   <Typography variant="subtitle2" sx={{ mb: 2, fontWeight: 600 }}>
-                    Días de semana individuales
+                    Días activos de lunes a viernes
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Puedes desactivar días específicos (ej: cerrado los lunes)
+                    Activa o desactiva días específicos (ej. cerrado los lunes)
                   </Typography>
                   
                   <Box sx={{ 
@@ -291,9 +291,9 @@ const SimplifiedScheduleConfig: React.FC<SimplifiedScheduleConfigProps> = ({
         </Typography>
       </Alert>
 
-      {renderScheduleGroup('weekdays', 'Lunes a Viernes', 'Horarios para días laborables')}
-      {renderScheduleGroup('saturday', 'Sábado', 'Horarios para el sábado')}
-      {renderScheduleGroup('sunday', 'Domingo', 'Horarios para el domingo')}
+      {renderScheduleGroup('weekdays', 'Lunes a Viernes', 'Franja(s) de apertura habitual')}
+      {renderScheduleGroup('saturday', 'Sábado', 'Franja(s) de apertura del sábado')}
+      {renderScheduleGroup('sunday', 'Domingo', 'Franja(s) de apertura del domingo')}
 
       {error && (
         <Alert severity="error" sx={{ mt: 2 }}>

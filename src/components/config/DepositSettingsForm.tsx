@@ -20,20 +20,20 @@ const DepositSettingsForm: React.FC<DepositSettingsFormProps> = ({ value, onChan
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       <FormControlLabel
         control={<Switch checked={requiresDeposit} onChange={(e) => onChange({ requiresDeposit: e.target.checked })} />}
-        label="¿Requiere paga y señal para confirmar reservas?"
+        label="Solicitar paga y señal para confirmar reservas"
         sx={{ alignItems: 'flex-start' }}
       />
 
       {requiresDeposit && (
         <Box sx={{ ml: { xs: 1, sm: 3 }, display: 'flex', flexDirection: 'column', gap: 2 }}>
           <FormControl>
-            <FormLabel>Tipo de depósito</FormLabel>
+            <FormLabel>Tipo de paga y señal</FormLabel>
             <RadioGroup
               value={depositType}
               onChange={(e) => onChange({ depositType: e.target.value as 'FIXED_PER_RESERVATION' | 'PER_PERSON' })}
             >
               <FormControlLabel value="FIXED_PER_RESERVATION" control={<Radio />} label="Cantidad fija por reserva" />
-              <FormControlLabel value="PER_PERSON" control={<Radio />} label="Valor por persona" />
+              <FormControlLabel value="PER_PERSON" control={<Radio />} label="Cantidad por persona" />
             </RadioGroup>
           </FormControl>
 
@@ -44,7 +44,12 @@ const DepositSettingsForm: React.FC<DepositSettingsFormProps> = ({ value, onChan
             value={depositAmount ?? ''}
             onChange={(e) => onChange({ depositAmount: e.target.value === '' ? undefined : parseFloat(e.target.value) })}
             error={Boolean(errors.depositAmount)}
-            helperText={errors.depositAmount}
+            helperText={
+              errors.depositAmount ||
+              (depositType === 'PER_PERSON'
+                ? 'Se cobrará esta cantidad por comensal'
+                : 'Se cobrará esta cantidad por reserva')
+            }
             inputProps={{ min: 0, step: 0.01 }}
             sx={{ maxWidth: { xs: '100%', sm: 300 } }}
           />

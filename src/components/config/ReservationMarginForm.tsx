@@ -44,7 +44,7 @@ const ReservationMarginForm: React.FC<ReservationMarginFormProps> = ({ value, on
             onChange={(e) => onChange({ enabled: e.target.checked })}
           />
         }
-        label="Habilitar margen mínimo de reserva"
+        label="Exigir antelación mínima para reservar"
       />
 
       {enabled && (
@@ -65,19 +65,19 @@ const ReservationMarginForm: React.FC<ReservationMarginFormProps> = ({ value, on
               setMinText(String(normalized));
             }}
             error={Boolean(errors.minTimeForReservations)}
-            helperText={errors.minTimeForReservations || `Por defecto: ${DEFAULT_MIN_TIME_FOR_RESERVATIONS} minutos`}
+            helperText={errors.minTimeForReservations || `Si está vacío, usaremos el valor recomendado: ${DEFAULT_MIN_TIME_FOR_RESERVATIONS} minutos`}
             sx={{ maxWidth: { xs: '100%', sm: 300 } }}
           />
 
           <Box>
-            <FormLabel component="legend">¿Qué hacer cuando una reserva no cumple el tiempo mínimo?</FormLabel>
+            <FormLabel component="legend">Si no se cumple la antelación mínima</FormLabel>
             <RadioGroup
               value={actionDuringReservationGracePeriod}
               onChange={(e) => onChange({ actionDuringReservationGracePeriod: e.target.value as 'DISCARD' | 'REDIRECT' })}
               sx={{ gap: { xs: 1, sm: 0.5 } }}
             >
               <FormControlLabel value="DISCARD" control={<Radio />} label="Descartar la reserva" />
-              <FormControlLabel value="REDIRECT" control={<Radio />} label="Redireccionar a la persona de contacto del restaurante" />
+              <FormControlLabel value="REDIRECT" control={<Radio />} label="Redirigir la llamada a un responsable" />
             </RadioGroup>
           </Box>
 
@@ -89,7 +89,7 @@ const ReservationMarginForm: React.FC<ReservationMarginFormProps> = ({ value, on
               value={gracePeriodRedirectPhone ?? ''}
               onChange={(e) => onChange({ gracePeriodRedirectPhone: e.target.value })}
               error={Boolean(errors.gracePeriodRedirectPhone)}
-              helperText={errors.gracePeriodRedirectPhone || 'Si no se indica, se usará el de redirección general'}
+              helperText={errors.gracePeriodRedirectPhone || 'Si no lo indicas, usaremos el número de redirección general'}
             />
           )}
         </Box>
