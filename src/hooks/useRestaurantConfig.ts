@@ -55,6 +55,7 @@ export const useRestaurantConfig = () => {
           askReservationReason: restaurantConfig.askReservationReason !== null ? restaurantConfig.askReservationReason : undefined,
           askAllergies: restaurantConfig.askAllergies !== null ? restaurantConfig.askAllergies : undefined,
           askFoodType: restaurantConfig.askFoodType !== null ? restaurantConfig.askFoodType : undefined,
+          acceptsPhoneOrders: restaurantConfig.acceptsPhoneOrders !== null ? restaurantConfig.acceptsPhoneOrders : undefined,
           // Horarios y configuración del bot
           reservationSchedule: restaurantConfig.reservationSchedule ? JSON.parse(restaurantConfig.reservationSchedule as string) : undefined,
           callRedirectionSchedule: restaurantConfig.callRedirectionSchedule ? JSON.parse(restaurantConfig.callRedirectionSchedule as string) : undefined,
@@ -108,11 +109,12 @@ export const useRestaurantConfig = () => {
           barSeats: newConfig.barSeats !== undefined ? newConfig.barSeats : null,
           // Configuración avanzada
           requiresDeposit: newConfig.requiresDeposit !== undefined ? newConfig.requiresDeposit : null,
-          depositType: newConfig.depositType !== undefined ? newConfig.depositType : null,
+          depositType: newConfig.depositType || null,
           depositAmount: newConfig.depositAmount !== undefined ? newConfig.depositAmount : null,
           askReservationReason: newConfig.askReservationReason !== undefined ? newConfig.askReservationReason : null,
           askAllergies: newConfig.askAllergies !== undefined ? newConfig.askAllergies : null,
           askFoodType: newConfig.askFoodType !== undefined ? newConfig.askFoodType : null,
+          acceptsPhoneOrders: newConfig.acceptsPhoneOrders !== undefined ? newConfig.acceptsPhoneOrders : null,
           // Horarios y configuración del bot
           reservationSchedule: newConfig.reservationSchedule ? JSON.stringify(newConfig.reservationSchedule) : null,
           callRedirectionSchedule: newConfig.callRedirectionSchedule ? JSON.stringify(newConfig.callRedirectionSchedule) : null,
@@ -151,6 +153,7 @@ export const useRestaurantConfig = () => {
             askReservationReason: data.askReservationReason || false,
             askAllergies: data.askAllergies || false,
             askFoodType: data.askFoodType || false,
+            acceptsPhoneOrders: data.acceptsPhoneOrders || false,
             // Horarios y configuración del bot
             reservationSchedule: data.reservationSchedule ? JSON.parse(data.reservationSchedule as string) : undefined,
             callRedirectionSchedule: data.callRedirectionSchedule ? JSON.parse(data.callRedirectionSchedule as string) : undefined,
@@ -190,6 +193,7 @@ export const useRestaurantConfig = () => {
           askReservationReason: newConfig.askReservationReason !== undefined ? newConfig.askReservationReason : null,
           askAllergies: newConfig.askAllergies !== undefined ? newConfig.askAllergies : null,
           askFoodType: newConfig.askFoodType !== undefined ? newConfig.askFoodType : null,
+          acceptsPhoneOrders: newConfig.acceptsPhoneOrders !== undefined ? newConfig.acceptsPhoneOrders : null,
           // Horarios y configuración del bot
           reservationSchedule: newConfig.reservationSchedule ? JSON.stringify(newConfig.reservationSchedule) : null,
           callRedirectionSchedule: newConfig.callRedirectionSchedule ? JSON.stringify(newConfig.callRedirectionSchedule) : null,
@@ -228,6 +232,7 @@ export const useRestaurantConfig = () => {
             askReservationReason: data.askReservationReason || false,
             askAllergies: data.askAllergies || false,
             askFoodType: data.askFoodType || false,
+            acceptsPhoneOrders: data.acceptsPhoneOrders || false,
             // Configuración de margen de reserva
             minTimeForReservations: data.minTimeForReservations !== null ? data.minTimeForReservations : undefined,
             actionDuringReservationGracePeriod: data.actionDuringReservationGracePeriod || undefined,

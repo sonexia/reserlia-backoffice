@@ -166,7 +166,7 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
       <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
         <Box sx={{ py: 1 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 2, sm: 3 } }}>
-            Configura los horarios de tu restaurante para reservas y redirección de llamadas
+            Configura los horarios de tu restaurante para reservas y cuándo las llamadas van a tu teléfono personal
           </Typography>
 
           {/* Horarios de Reservas */}
@@ -182,7 +182,7 @@ const ScheduleSettings: React.FC<ScheduleSettingsProps> = ({
 
           <Divider sx={{ my: 3 }} />
 
-          {/* Horarios de Redirección de Llamadas (Reutilizable) */}
+          {/* Horarios de Redirección de Llamadas */}
           <Box>
             <CallRedirectionSettingsForm
               value={{

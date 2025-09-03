@@ -46,6 +46,9 @@ const schema = a.schema({
       askAllergies: a.boolean().default(false), // ¿Preguntar por alergias?
       askFoodType: a.boolean().default(false), // ¿Preguntar por tipo de comida?
       
+      // Configuración de pedidos por teléfono
+      acceptsPhoneOrders: a.boolean().default(false), // ¿Acepta pedidos por teléfono?
+      
       // Horarios y configuración del bot
       reservationSchedule: a.json(), // Horarios de reservas por día de la semana
       callRedirectionSchedule: a.json(), // Horarios de redirección de llamadas por día de la semana

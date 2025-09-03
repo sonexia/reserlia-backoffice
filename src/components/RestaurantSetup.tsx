@@ -111,6 +111,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     askReservationReason: false,
     askAllergies: false,
     askFoodType: false,
+    acceptsPhoneOrders: false,
     // Nuevos campos
     reservationSchedule: createDefaultSchedule(),
     callRedirectionSchedule: createDefaultSchedule(),
@@ -335,7 +336,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
     },
     {
       label: 'Redirección de llamadas',
-      description: 'Configure cuándo redirigir llamadas a personal',
+      description: 'Configure cuándo las llamadas van a su teléfono en lugar del bot',
       icon: <Phone />
     },
     {
@@ -619,7 +620,24 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                       errors={errors}
                     />
 
-                    {/* Preguntas adicionales */}
+                    {/* Configuración de pedidos por teléfono */}
+                    <Box>
+                      <Typography variant="h6" sx={{ mb: 2 }}>Pedidos por teléfono:</Typography>
+                      
+                      <Stack spacing={1}>
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={config.acceptsPhoneOrders || false}
+                              onChange={(e) => setConfig(prev => ({ ...prev, acceptsPhoneOrders: e.target.checked }))}
+                            />
+                          }
+                          label="¿Tu restaurante recibe llamadas para encargar pedidos (a recoger en local o entregar a domicilio)?"
+                        />
+                      </Stack>
+                    </Box>
+
+                    {/* Preguntas adicionales - DESHABILITADO POR PETICIÓN DEL USUARIO
                     <Box>
                       <Typography variant="h6" sx={{ mb: 2 }}>Preguntas adicionales para las reservas:</Typography>
                       
@@ -655,6 +673,7 @@ const RestaurantSetup: React.FC<RestaurantSetupProps> = ({ onComplete, loading =
                         />
                       </Stack>
                     </Box>
+                    */}
                   </Stack>
                 )}
 

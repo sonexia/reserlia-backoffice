@@ -58,7 +58,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
     // Preguntas adicionales
     askReservationReason: false,
     askAllergies: false,
-    askFoodType: false
+    askFoodType: false,
+    acceptsPhoneOrders: false
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -80,7 +81,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         actionDuringReservationGracePeriod: config.actionDuringReservationGracePeriod || 'DISCARD',
         askReservationReason: config.askReservationReason || false,
         askAllergies: config.askAllergies || false,
-        askFoodType: config.askFoodType || false
+        askFoodType: config.askFoodType || false,
+        acceptsPhoneOrders: config.acceptsPhoneOrders || false
       });
       // Cargar teléfono de redirección del período de gracia
       setGracePeriodRedirectPhone((config as { gracePeriodRedirectPhone?: string | null }).gracePeriodRedirectPhone || '');
@@ -134,7 +136,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
           : undefined,
         askReservationReason: editConfig.askReservationReason,
         askAllergies: editConfig.askAllergies,
-        askFoodType: editConfig.askFoodType
+        askFoodType: editConfig.askFoodType,
+        acceptsPhoneOrders: editConfig.acceptsPhoneOrders
       };
       onUpdate(updatedConfig);
       onClose?.(); // Close the popup after saving
@@ -156,7 +159,8 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
         actionDuringReservationGracePeriod: config.actionDuringReservationGracePeriod || 'DISCARD',
         askReservationReason: config.askReservationReason || false,
         askAllergies: config.askAllergies || false,
-        askFoodType: config.askFoodType || false
+        askFoodType: config.askFoodType || false,
+        acceptsPhoneOrders: config.acceptsPhoneOrders || false
       });
       setGracePeriodRedirectPhone((config as { gracePeriodRedirectPhone?: string | null }).gracePeriodRedirectPhone || '');
     }
@@ -196,7 +200,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
       <DialogContent sx={{ px: { xs: 2, sm: 3 }, py: { xs: 1, sm: 2 } }}>
         <Box sx={{ py: 1 }}>
           <Typography variant="body2" color="text.secondary" sx={{ mb: { xs: 2, sm: 3 } }}>
-            Configura opciones avanzadas para tu restaurante: límites del bot, depósitos y preguntas adicionales
+            Configura opciones avanzadas para tu restaurante: límites del bot y depósitos
           </Typography>
 
           {/* Configuración del Bot */}
@@ -283,7 +287,39 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
             </CardContent>
           </Card>
 
-          {/* Preguntas Adicionales */}
+          {/* Configuración de pedidos por teléfono */}
+          <Card sx={{ mb: { xs: 2, sm: 3 } }}>
+            <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+              <Typography variant="h6" sx={{ 
+                mb: 2,
+                fontSize: { xs: '1rem', sm: '1.25rem' }
+              }}>
+                Pedidos por Teléfono
+              </Typography>
+              
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: { xs: 1.5, sm: 1 } }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={editConfig.acceptsPhoneOrders}
+                      onChange={(e) => setEditConfig(prev => ({ ...prev, acceptsPhoneOrders: e.target.checked }))}
+                    />
+                  }
+                  label="¿Tu restaurante recibe llamadas para encargar pedidos (a recoger en local o entregar a domicilio)?"
+                  sx={{ 
+                    alignItems: 'flex-start',
+                    '& .MuiFormControlLabel-label': { 
+                      fontSize: { xs: '0.875rem', sm: '1rem' },
+                      lineHeight: 1.4,
+                      mt: 0.25
+                    }
+                  }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
+
+          {/* Preguntas Adicionales - DESHABILITADO POR PETICIÓN DEL USUARIO
           <Card sx={{ mb: { xs: 2, sm: 3 } }}>
             <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
               <Typography variant="h6" sx={{ 
@@ -350,6 +386,7 @@ const AdvancedSettings: React.FC<AdvancedSettingsProps> = ({
               </Box>
             </CardContent>
           </Card>
+          */}
 
           {/* Errores generales */}
           {Object.keys(errors).length > 0 && (

@@ -263,7 +263,6 @@ Si trabajas contra el Sandbox real (no Docker), no establezcas `VITE_AWS_ENV=loc
 
 
 
+START LOCAL:
 
-
-
-npx dotenv -e .env.local -- npx ampx sandbox
+ npx dotenv -e .env.local -- npx ampx sandbox & npm run dev -- --host 0.0.0.0 & npm run dev:lambda
