@@ -59,6 +59,10 @@ export default function ReservationTable({ reservations, onEdit, onDelete, timez
         header: "Mesa",
       },
       {
+        accessorKey: "location",
+        header: "Ubicación",
+      },
+      {
         accessorKey: "notes",
         header: "Observaciones",
       },
@@ -81,8 +85,9 @@ export default function ReservationTable({ reservations, onEdit, onDelete, timez
             ? {
                 density: 'compact',
                 columnVisibility: {
-                  // Mostrar cliente y teléfono en móvil
+                  // Mostrar cliente, teléfono y ubicación en móvil
                   phoneNumber: true,
+                  location: true,
                   // Ocultar columnas menos críticas
                   partySize: false,
                   tableNumber: false,

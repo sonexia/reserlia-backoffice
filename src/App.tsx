@@ -69,6 +69,7 @@ function App() {
           phoneNumber: input.phoneNumber,
           partySize: input.partySize,
           tableNumber: input.tableNumber,
+          location: input.location,
           notes: input.notes,
         };
         await client.models.Reservation.update(updateData);
